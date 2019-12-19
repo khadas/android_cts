@@ -76,6 +76,9 @@ static void loadMediaAndVerifyFrameImport(JNIEnv *env, jclass, jobject assetMgr,
     // Could not initialize Vulkan due to lack of device support, skip test.
     return;
   }
+  VkImageRenderer renderer(&init, kTestImageWidth, kTestImageHeight,
+                           VK_FORMAT_R8G8B8A8_UNORM, 4);
+  ASSERT(renderer.init(env, assetMgr), "Could not init VkImageRenderer.");
 
   // Set up the image reader and media helpers used to get a frames from video.
   ImageReaderHelper imageReader(kTestImageWidth, kTestImageHeight,
@@ -97,23 +100,9 @@ static void loadMediaAndVerifyFrameImport(JNIEnv *env, jclass, jobject assetMgr,
     ret = imageReader.getBufferFromCurrentImage(&buffer);
   }
 
-  // Read the width/height of the produced AHardwareBuffer. AImageReader may round up from our
-  // expected video size.
-  AHardwareBuffer_Desc bufferDesc;
-  AHardwareBuffer_describe(buffer, &bufferDesc);
-  // The AImageReader may round up the size of the AHardwareBuffer returned.
-  ASSERT(bufferDesc.width >= kTestImageWidth, "Unexpectedly small image width read from video.");
-  ASSERT(bufferDesc.height >= kTestImageHeight, "Unexpectedly small image height read from video.");
-
-  // Create a VkImageRenderer with the actual width/height of the AHardwareBuffer.
-  VkImageRenderer renderer(&init, bufferDesc.width, bufferDesc.height,
-                           VK_FORMAT_R8G8B8A8_UNORM, 4);
-  ASSERT(renderer.init(env, assetMgr), "Could not init VkImageRenderer.");
-
   // Import the AHardwareBuffer into Vulkan.
   VkAHardwareBufferImage vkImage(&init);
-  ASSERT(vkImage.init(buffer, true /* useExternalFormat */),
-         "Could not init VkAHardwareBufferImage.");
+  ASSERT(vkImage.init(buffer, true /* useExternalFormat */), "Could not init VkAHardwareBufferImage.");
 
   // Render the AHardwareBuffer using Vulkan and read back the result.
   std::vector<uint32_t> framePixels;
@@ -121,24 +110,23 @@ static void loadMediaAndVerifyFrameImport(JNIEnv *env, jclass, jobject assetMgr,
              vkImage.image(), vkImage.sampler(), vkImage.view(),
              vkImage.semaphore(), vkImage.isSamplerImmutable(), &framePixels),
          "Could not get frame pixels from Vulkan.");
-  ASSERT(framePixels.size() == bufferDesc.width * bufferDesc.height,
+  ASSERT(framePixels.size() == kTestImageWidth * kTestImageHeight,
          "Unexpected number of pixels in frame");
 
   // Ensure that the data we read back matches our reference image.
   size_t referenceSize =
       static_cast<size_t>(env->GetArrayLength(referencePixels));
-  ASSERT(referenceSize == kTestImageWidth * kTestImageHeight,
-         "Unexpected number of pixels in reference image.");
+  ASSERT(framePixels.size() == referenceSize,
+         "Unexpected number of pixels in frame.");
   uint32_t *referenceData = reinterpret_cast<uint32_t *>(
       env->GetIntArrayElements(referencePixels, 0));
   for (uint32_t x = 0; x < kTestImageWidth; ++x) {
     for (uint32_t y = 0; y < kTestImageHeight; ++y) {
-      size_t frame_offset = y * bufferDesc.width + x;
-      size_t reference_offset = y * kTestImageWidth + x;
+      size_t offset = y * kTestImageWidth + x;
       static const int32_t kTolerance = 0x30;
-      uint32_t value1 = framePixels[frame_offset];
+      uint32_t value1 = framePixels[offset];
       // Reference data is BGRA, Vk data is BGRA.
-      uint32_t value2 = swizzleBgraToRgba(referenceData[reference_offset]);
+      uint32_t value2 = swizzleBgraToRgba(referenceData[offset]);
       ASSERT(fuzzyMatch(value1, value2, kTolerance),
              "Expected ~0x%08X at (%i,%i), got 0x%08X", value2, x, y, value1);
     }

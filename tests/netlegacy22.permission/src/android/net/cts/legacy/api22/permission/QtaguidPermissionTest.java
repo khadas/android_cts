@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+
+
 public class QtaguidPermissionTest extends AndroidTestCase {
 
     private static final String QTAGUID_STATS_FILE = "/proc/net/xt_qtaguid/stats";
@@ -54,20 +56,19 @@ public class QtaguidPermissionTest extends AndroidTestCase {
         }
     }
 
-    private void accessOwnTrafficStats(long expectedTxBytes) throws IOException {
+    private void accessOwnTrafficStats() throws IOException {
 
         final int ownAppUid = getContext().getApplicationInfo().uid;
 
-        long totalTxBytes = 0;
+        boolean foundOwnDetailedStats = false;
         try {
             BufferedReader qtaguidReader = new BufferedReader(new FileReader(QTAGUID_STATS_FILE));
             String line;
             while ((line = qtaguidReader.readLine()) != null) {
                 String tokens[] = line.split(" ");
                 if (tokens.length > 3 && tokens[3].equals(String.valueOf(ownAppUid))) {
-                    // Check the total stats of this uid is larger then 1MB
-                    if (tokens[2].equals("0x0")) {
-                        totalTxBytes += Integer.parseInt(tokens[7]);
+                    if (!tokens[2].equals("0x0")) {
+                      foundOwnDetailedStats = true;
                     }
                 }
             }
@@ -75,8 +76,7 @@ public class QtaguidPermissionTest extends AndroidTestCase {
         } catch (FileNotFoundException e) {
             fail("Was not able to access qtaguid/stats: " + e);
         }
-        assertTrue(totalTxBytes + " expected to be greater than or equal to"
-            + expectedTxBytes + "bytes", totalTxBytes >= expectedTxBytes);
+        assertTrue("Was expecting to find own traffic stats", foundOwnDetailedStats);
     }
 
     public void testAccessOwnQtaguidTrafficStats() throws IOException {
@@ -124,6 +124,6 @@ public class QtaguidPermissionTest extends AndroidTestCase {
             server.close();
         }
 
-        accessOwnTrafficStats(byteCount * packetCount);
+        accessOwnTrafficStats();
     }
 }

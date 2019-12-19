@@ -79,9 +79,6 @@ public class MixedManagedProfileOwnerTestApi25 extends DeviceAndProfileOwnerTest
             return;
         }
 
-        // Make sure user initialization is complete before proceeding.
-        waitForBroadcastIdle();
-
         // Lock FBE and verify resetPassword is disabled
         executeDeviceTestMethod(FBE_HELPER_CLASS, "testSetPassword");
         rebootAndWaitUntilReady();

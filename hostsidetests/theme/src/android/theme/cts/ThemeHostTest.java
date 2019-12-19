@@ -89,7 +89,7 @@ public class ThemeHostTest extends DeviceTestCase {
         super.setUp();
 
         mDevice = getDevice();
-        mDevice.executeShellCommand("settings put system font_scale 1.0");
+
         final String density = getDensityBucketForDevice(mDevice);
         final String referenceZipAssetPath = String.format("/%s.zip", density);
         mReferences = extractReferenceImages(referenceZipAssetPath);
@@ -144,7 +144,7 @@ public class ThemeHostTest extends DeviceTestCase {
 
     public void testThemes() throws Exception {
         if (checkHardwareTypeSkipTest(mDevice.executeShellCommand(HARDWARE_TYPE_CMD).trim())) {
-            Log.logAndDisplay(LogLevel.INFO, LOG_TAG, "Skipped themes test for watch / TV / automotive");
+            Log.logAndDisplay(LogLevel.INFO, LOG_TAG, "Skipped themes test for watch / TV");
             return;
         }
 
@@ -273,8 +273,7 @@ public class ThemeHostTest extends DeviceTestCase {
         final Pattern p = Pattern.compile("Override density: (\\d+)");
         final Matcher m = p.matcher(output);
         if (m.find()) {
-            throw new RuntimeException("Cannot test device running at non-default density: "
-                    + Integer.parseInt(m.group(1)));
+            return Integer.parseInt(m.group(1));
         }
 
         final String densityProp;
@@ -288,7 +287,6 @@ public class ThemeHostTest extends DeviceTestCase {
 
     private static boolean checkHardwareTypeSkipTest(String hardwareTypeString) {
         return hardwareTypeString.contains("android.hardware.type.watch")
-                || hardwareTypeString.contains("android.hardware.type.television")
-                || hardwareTypeString.contains("android.hardware.type.automotive");
+                || hardwareTypeString.contains("android.hardware.type.television");
     }
 }

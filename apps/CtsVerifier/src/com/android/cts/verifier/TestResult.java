@@ -68,7 +68,7 @@ public class TestResult {
                 testDetails, reportLog));
     }
 
-    public static Intent createResult(Activity activity, int testResult, String testName,
+    private static Intent createResult(Activity activity, int testResult, String testName,
             String testDetails, ReportLog reportLog) {
         Intent data = new Intent(activity, activity.getClass());
         addResultData(data, testResult, testName, testDetails, reportLog);

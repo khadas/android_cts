@@ -22,7 +22,6 @@ import android.app.stubs.OrientationTestUtils;
 import android.graphics.Point;
 import android.test.ActivityInstrumentationTestCase2;
 import android.view.Display;
-import static com.android.compatibility.common.util.PackageUtil.supportsRotation;
 
 /**
  * Tests to verify functionality of {@link Display}.
@@ -49,11 +48,6 @@ public class DisplayTest extends ActivityInstrumentationTestCase2<DisplayTestAct
      * updated adjustments after a rotation.
      */
     public void testRotation() throws Throwable {
-        if (!supportsRotation()) {
-            // Skip rotation test if device doesn't support it.
-            return;
-        }
-
         // Get a {@link Display} instance before rotation.
         final Display origDisplay = mActivity.getDisplay();
 
@@ -64,14 +58,7 @@ public class DisplayTest extends ActivityInstrumentationTestCase2<DisplayTestAct
         // Change orientation
         mActivity.configurationChangeObserver.startObserving();
         OrientationTestUtils.switchOrientation(mActivity);
-
-        final boolean squareDisplay = (origSize.x == origSize.y);
-      
-        // Don't wait for the configuration to change if the
-        // the display is square. In many cases it won't.
-        if (!squareDisplay) {
-            mActivity.configurationChangeObserver.await();
-        }
+        mActivity.configurationChangeObserver.await();
 
         final Point newOrigSize = new Point();
         origDisplay.getSize(newOrigSize);
@@ -82,7 +69,7 @@ public class DisplayTest extends ActivityInstrumentationTestCase2<DisplayTestAct
         updatedDisplay.getSize(updatedSize);
 
         // For square screens the following assertions do not make sense and will always fail.
-        if (!squareDisplay) {
+        if (origSize.x != origSize.y) {
             // Ensure that the width and height of the original instance no longer are the same. Note
             // that this will be false if the device width and height are identical.
             // Note there are cases where width and height may not all be updated, such as on docked

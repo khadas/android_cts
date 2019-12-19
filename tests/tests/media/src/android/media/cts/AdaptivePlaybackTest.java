@@ -1238,23 +1238,14 @@ class Media {
         return copy;
     }
 
-    public MediaFormat getAdaptiveFormat(int width, int height, int maxInputSize) {
+    public MediaFormat getAdaptiveFormat(int width, int height) {
         mAdaptiveFormat.setInteger(MediaFormat.KEY_MAX_WIDTH, width);
         mAdaptiveFormat.setInteger(MediaFormat.KEY_MAX_HEIGHT, height);
-        mAdaptiveFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, maxInputSize);
         return mAdaptiveFormat;
     }
 
     public String getMime() {
         return mFormat.getString(MediaFormat.KEY_MIME);
-    }
-
-    public int getMaxInputSize() {
-        return mFormat.getInteger(MediaFormat.KEY_MAX_INPUT_SIZE);
-    }
-
-    public void setMaxInputSize(int maxInputSize) {
-        mFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, maxInputSize);
     }
 
     public int getWidth() {
@@ -1314,7 +1305,6 @@ class Media {
             }
         }
 
-        int maxInputSize = 0;
         ByteBuffer readBuf = ByteBuffer.allocate(2000000);
         for (int ix = 0; ix < numFrames; ix++) {
             int sampleSize = extractor.readSampleData(readBuf, 0 /* offset */);
@@ -1326,11 +1316,6 @@ class Media {
                 for (ByteBuffer csd: csds) {
                     sampleSize += csd.capacity();
                 }
-
-                if (maxInputSize < sampleSize) {
-                    maxInputSize = sampleSize;
-                }
-
                 ByteBuffer buf = ByteBuffer.allocate(sampleSize);
                 for (ByteBuffer csd: csds) {
                     csd.clear();
@@ -1350,10 +1335,6 @@ class Media {
         }
         extractor.release();
         testFd.close();
-
-        /* Override MAX_INPUT_SIZE in format, as CSD is being combined
-         * with one of the input buffers */
-        media.setMaxInputSize(maxInputSize);
         return media;
     }
 }
@@ -1606,16 +1587,10 @@ abstract class Test {
             format = c.mediaList[i].getFormat();
         } else if (mFormatType == FORMAT_ADAPTIVE_FIRST && c.adaptive) {
             format = c.mediaList[i].getAdaptiveFormat(
-                c.mediaList[i].getWidth(), c.mediaList[i].getHeight(), c.mediaList[i].getMaxInputSize());
-            for (Media media : c.mediaList) {
-                /* get the largest max input size for all media and use that */
-                if (media.getMaxInputSize() > format.getInteger(MediaFormat.KEY_MAX_INPUT_SIZE)) {
-                    format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, media.getMaxInputSize());
-                }
-            }
+                c.mediaList[i].getWidth(), c.mediaList[i].getHeight());
         } else if (mFormatType == FORMAT_ADAPTIVE_LARGEST && c.adaptive) {
             /* update adaptive format to max size used */
-            format = c.mediaList[i].getAdaptiveFormat(0, 0, 0);
+            format = c.mediaList[i].getAdaptiveFormat(0, 0);
             for (Media media : c.mediaList) {
                 /* get the largest width, and the largest height independently */
                 if (media.getWidth() > format.getInteger(MediaFormat.KEY_MAX_WIDTH)) {
@@ -1623,9 +1598,6 @@ abstract class Test {
                 }
                 if (media.getHeight() > format.getInteger(MediaFormat.KEY_MAX_HEIGHT)) {
                     format.setInteger(MediaFormat.KEY_MAX_HEIGHT, media.getHeight());
-                }
-                if (media.getMaxInputSize() > format.getInteger(MediaFormat.KEY_MAX_INPUT_SIZE)) {
-                    format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, media.getMaxInputSize());
                 }
             }
         }

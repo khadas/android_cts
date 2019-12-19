@@ -18,7 +18,6 @@
 
 package android.omapi.accesscontrol1.cts;
 
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
@@ -39,7 +38,7 @@ import android.se.omapi.SEService;
 import android.se.omapi.SEService.OnConnectedListener;
 import android.se.omapi.Session;
 import android.support.test.InstrumentationRegistry;
-import android.os.Build;
+
 import com.android.compatibility.common.util.PropertyUtil;
 
 public class AccessControlTest {
@@ -116,7 +115,7 @@ public class AccessControlTest {
     private final static byte[][] AUTHORIZED_APDU_AID_41 = new byte[][] {
         { (byte) 0x94, 0x06, 0x00, 0x00 },
         { (byte) 0x94, 0x08, 0x00, 0x00, 0x00 },
-        { (byte) 0x94, (byte) 0x0C, 0x00, 0x00, 0x01, (byte) 0xAA, 0x00 },
+        { (byte) 0x94, (byte) 0xC0, 0x00, 0x00, 0x01, (byte) 0xAA, 0x00 },
         { (byte) 0x94, 0x0A, 0x00, 0x00, 0x01, (byte) 0xAA } };
     /* Unauthorized APDU for AID_41 */
     private final static byte[][] UNAUTHORIZED_APDU_AID_41 = new byte[][] {
@@ -128,9 +127,9 @@ public class AccessControlTest {
         { (byte) 0xA0, 0x0A, 0x00, 0x00, 0x01, (byte) 0xAA },
         { (byte) 0x80, 0x08, 0x00, 0x00, 0x00 },
         { (byte) 0xA0, 0x08, 0x00, 0x00, 0x00 },
-        { 0x00, (byte) 0x0C, 0x00, 0x00, 0x01, (byte) 0xAA, 0x00 },
-        { (byte) 0x80, (byte) 0x0C, 0x00, 0x00, 0x01, (byte) 0xAA, 0x00 },
-        { (byte) 0xA0, (byte) 0x0C, 0x00, 0x00, 0x01, (byte) 0xAA, 0x00 },
+        { 0x00, (byte) 0xC0, 0x00, 0x00, 0x01, (byte) 0xAA, 0x00 },
+        { (byte) 0x80, (byte) 0xC0, 0x00, 0x00, 0x01, (byte) 0xAA, 0x00 },
+        { (byte) 0xA0, (byte) 0xC0, 0x00, 0x00, 0x01, (byte) 0xAA, 0x00 },
     };
 
     private final long SERVICE_CONNECTION_TIME_OUT = 3000;
@@ -163,7 +162,6 @@ public class AccessControlTest {
 
     @Before
     public void setUp() throws Exception {
-        assumeTrue(PropertyUtil.getFirstApiLevel() > Build.VERSION_CODES.O_MR1);
         assumeTrue(supportsHardware());
         seService = new SEService(InstrumentationRegistry.getContext(), new SynchronousExecutor(), mListener);
         connectionTimer = new Timer();
@@ -241,121 +239,121 @@ public class AccessControlTest {
     }
 
     private void testSelectableAid(byte[] aid) {
+        Session session = null;
+        Channel channel = null;
         try {
             waitForConnection();
             Reader[] readers = seService.getReaders();
             for (Reader reader : readers) {
-                Session session = null;
-                Channel channel = null;
-                try {
-                    assertTrue(reader.isSecureElementPresent());
-                    session = reader.openSession();
-                    assertNotNull("Null Session", session);
-                    channel = session.openLogicalChannel(aid, (byte) 0x00);
-                    assertNotNull("Null Channel", channel);
-                    byte[] selectResponse = channel.getSelectResponse();
-                    assertNotNull("Null Select Response", selectResponse);
-                    assertThat(selectResponse[selectResponse.length - 1] & 0xFF, is(0x00));
-                    assertThat(selectResponse[selectResponse.length - 2] & 0xFF, is(0x90));
-                    assertTrue("Select Response is not complete", verifyBerTlvData(selectResponse));
-                } finally {
-                    if (channel != null) channel.close();
-                    if (session != null) session.close();
-                }
+                assertTrue(reader.isSecureElementPresent());
+                session = reader.openSession();
+                assertNotNull("Null Session", session);
+                channel = session.openLogicalChannel(aid, (byte) 0x00);
+                assertNotNull("Null Channel", channel);
+                byte[] selectResponse = channel.getSelectResponse();
+                assertNotNull("Null Select Response", selectResponse);
+                assertEquals(selectResponse[selectResponse.length - 1] & 0xFF, 0x00);
+                assertEquals(selectResponse[selectResponse.length - 2] & 0xFF, 0x90);
+                assertTrue("Select Response is not complete", verifyBerTlvData(selectResponse));
             }
         } catch (Exception e) {
             fail("Unexpected Exception " + e);
+        } finally{
+            if (channel != null)
+                channel.close();
+            if (session != null)
+                session.close();
         }
     }
 
     private void testUnauthorisedAid(byte[] aid) {
+        Session session = null;
+        Channel channel = null;
         try {
             waitForConnection();
             Reader[] readers = seService.getReaders();
+
             for (Reader reader : readers) {
-                Session session = null;
-                Channel channel = null;
-                try {
-                    assertTrue(reader.isSecureElementPresent());
-                    session = reader.openSession();
-                    assertNotNull("Null Session", session);
-                    try {
-                        channel = session.openLogicalChannel(aid, (byte) 0x00);
-                        fail("SecurityException Expected");
-                    } catch (SecurityException e) {
-                        // Expected
-                    }
-                } finally {
-                    if (channel != null) channel.close();
-                    if (session != null) session.close();
-                }
+                assertTrue(reader.isSecureElementPresent());
+                session = reader.openSession();
+                assertNotNull("Null Session", session);
+                channel = session.openLogicalChannel(aid, (byte) 0x00);
+                fail("SecurityException Expected ");
             }
-        } catch (Exception e) {
+        } catch(SecurityException ex){ }
+        catch (Exception e) {
             fail("Unexpected Exception " + e);
         }
+        if (channel != null)
+            channel.close();
+        if (session != null)
+            session.close();
     }
 
     private void testTransmitAPDU(byte[] aid, byte[] apdu) {
+        Session session = null;
+        Channel channel = null;
         try {
             waitForConnection();
             Reader[] readers = seService.getReaders();
+
             for (Reader reader : readers) {
-                Session session = null;
-                Channel channel = null;
-                try {
-                    assertTrue(reader.isSecureElementPresent());
-                    session = reader.openSession();
-                    assertNotNull("Null Session", session);
-                    channel = session.openLogicalChannel(aid, (byte) 0x00);
-                    assertNotNull("Null Channel", channel);
-                    byte[] selectResponse = channel.getSelectResponse();
-                    assertNotNull("Null Select Response", selectResponse);
-                    assertThat(selectResponse[selectResponse.length - 1] & 0xFF, is(0x00));
-                    assertThat(selectResponse[selectResponse.length - 2] & 0xFF, is(0x90));
-                    assertTrue("Select Response is not complete", verifyBerTlvData(selectResponse));
-                    byte[] apduResponse = channel.transmit(apdu);
-                    assertNotNull("Null Channel", apduResponse);
-                } finally {
-                    if (channel != null) channel.close();
-                    if (session != null) session.close();
-                }
+                assertTrue(reader.isSecureElementPresent());
+                session = reader.openSession();
+                assertNotNull("Null Session", session);
+                channel = session.openLogicalChannel(aid, (byte) 0x00);
+                assertNotNull("Null Channel", channel);
+                byte[] selectResponse = channel.getSelectResponse();
+                assertNotNull("Null Select Response", selectResponse);
+                assertEquals(selectResponse[selectResponse.length - 1] & 0xFF, 0x00);
+                assertEquals(selectResponse[selectResponse.length - 2] & 0xFF, 0x90);
+                assertTrue("Select Response is not complete", verifyBerTlvData(selectResponse));
+                byte[] apduResponse = channel.transmit(apdu);
+                assertNotNull("Null Channel", apduResponse);
             }
         } catch (Exception e) {
             fail("Unexpected Exception " + e);
         }
+        if (channel != null)
+            channel.close();
+        if (session != null)
+            session.close();
     }
 
     private void testUnauthorisedAPDU(byte[] aid, byte[] apdu) {
+        Session session = null;
+        Channel channel = null;
+        boolean exceptionOnTransmit = false;
         try {
             waitForConnection();
             Reader[] readers = seService.getReaders();
+
             for (Reader reader : readers) {
-                Session session = null;
-                Channel channel = null;
-                try {
-                    assertTrue(reader.isSecureElementPresent());
-                    session = reader.openSession();
-                    assertNotNull("Null Session", session);
-                    channel = session.openLogicalChannel(aid, (byte) 0x00);
-                    assertNotNull("Null Channel", channel);
-                    byte[] selectResponse = channel.getSelectResponse();
-                    assertNotNull("Null Select Response", selectResponse);
-                    assertThat(selectResponse[selectResponse.length - 1] & 0xFF, is(0x00));
-                    assertThat(selectResponse[selectResponse.length - 2] & 0xFF, is(0x90));
-                    assertTrue("Select Response is not complete", verifyBerTlvData(selectResponse));
-                    try {
-                        channel.transmit(apdu);
-                        fail("Security Exception is expected");
-                    } catch (SecurityException e) {
-                        // Expected
-                    }
-                } finally {
-                    if (channel != null) channel.close();
-                    if (session != null) session.close();
-                }
+                assertTrue(reader.isSecureElementPresent());
+                session = reader.openSession();
+                assertNotNull("Null Session", session);
+                channel = session.openLogicalChannel(aid, (byte) 0x00);
+                assertNotNull("Null Channel", channel);
+                byte[] selectResponse = channel.getSelectResponse();
+                assertNotNull("Null Select Response", selectResponse);
+                assertEquals(selectResponse[selectResponse.length - 1] & 0xFF, 0x00);
+                assertEquals(selectResponse[selectResponse.length - 2] & 0xFF, 0x90);
+                assertTrue("Select Response is not complete", verifyBerTlvData(selectResponse));
+                exceptionOnTransmit = true;
+                channel.transmit(apdu);
+                fail("Security Exception is expected");
             }
+        } catch (SecurityException ex) {
+          if (!exceptionOnTransmit) {
+            fail("Unexpected SecurityException onSelect" + ex);
+          }
         } catch (Exception e) {
-            fail("Unexpected Exception " + e);
+          fail("Unexpected Exception " + e);
+        } finally {
+            if(channel != null)
+                channel.close();
+            if (session != null)
+                session.close();
         }
     }
 

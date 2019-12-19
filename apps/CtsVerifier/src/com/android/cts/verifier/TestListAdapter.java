@@ -91,9 +91,6 @@ public abstract class TestListAdapter extends BaseAdapter {
         /** Features necessary to run this test. */
         final String[] requiredFeatures;
 
-        /** Configs necessary to run this test. */
-        final String[] requiredConfigs;
-
         /** Features such that, if any present, the test gets excluded from being shown. */
         final String[] excludedFeatures;
 
@@ -120,27 +117,20 @@ public abstract class TestListAdapter extends BaseAdapter {
         }
 
         public static TestListItem newTest(String title, String testName, Intent intent,
-                String[] requiredFeatures, String[] requiredConfigs, String[] excludedFeatures,
-                String[] applicableFeatures) {
-            return new TestListItem(title, testName, intent, requiredFeatures, requiredConfigs,
-                    excludedFeatures, applicableFeatures);
-        }
-
-        public static TestListItem newTest(String title, String testName, Intent intent,
                 String[] requiredFeatures, String[] excludedFeatures, String[] applicableFeatures) {
-            return new TestListItem(title, testName, intent, requiredFeatures, null, excludedFeatures,
+            return new TestListItem(title, testName, intent, requiredFeatures, excludedFeatures,
                     applicableFeatures);
         }
 
         public static TestListItem newTest(String title, String testName, Intent intent,
                 String[] requiredFeatures, String[] excludedFeatures) {
-            return new TestListItem(title, testName, intent, requiredFeatures, null, excludedFeatures,
+            return new TestListItem(title, testName, intent, requiredFeatures, excludedFeatures,
                     null);
         }
 
         public static TestListItem newTest(String title, String testName, Intent intent,
                 String[] requiredFeatures) {
-            return new TestListItem(title, testName, intent, requiredFeatures, null, null, null);
+            return new TestListItem(title, testName, intent, requiredFeatures, null, null);
         }
 
         public static TestListItem newCategory(Context context, int titleResId) {
@@ -148,22 +138,15 @@ public abstract class TestListAdapter extends BaseAdapter {
         }
 
         public static TestListItem newCategory(String title) {
-            return new TestListItem(title, null, null, null, null, null, null);
+            return new TestListItem(title, null, null, null, null, null);
         }
 
         protected TestListItem(String title, String testName, Intent intent,
                 String[] requiredFeatures, String[] excludedFeatures, String[] applicableFeatures) {
-            this(title, testName, intent, requiredFeatures, null, excludedFeatures, applicableFeatures);
-        }
-
-        protected TestListItem(String title, String testName, Intent intent,
-                String[] requiredFeatures, String[] requiredConfigs, String[] excludedFeatures,
-                String[] applicableFeatures) {
             this.title = title;
             this.testName = testName;
             this.intent = intent;
             this.requiredFeatures = requiredFeatures;
-            this.requiredConfigs = requiredConfigs;
             this.excludedFeatures = excludedFeatures;
             this.applicableFeatures = applicableFeatures;
         }

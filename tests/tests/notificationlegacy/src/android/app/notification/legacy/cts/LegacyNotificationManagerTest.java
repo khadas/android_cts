@@ -46,7 +46,6 @@ import android.util.Log;
 
 import junit.framework.Assert;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -78,12 +77,6 @@ public class LegacyNotificationManagerTest {
         mNotificationManager.createNotificationChannel(new NotificationChannel(
                 NOTIFICATION_CHANNEL_ID, "name", NotificationManager.IMPORTANCE_DEFAULT));
         mActivityManager = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        toggleListenerAccess(MockNotificationListener.getId(),
-                InstrumentationRegistry.getInstrumentation(), false);
     }
 
     @Test

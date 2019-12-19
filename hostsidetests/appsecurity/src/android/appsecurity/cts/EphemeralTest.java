@@ -475,14 +475,12 @@ public class EphemeralTest extends DeviceTestCase
 
     private void runDeviceTests(String packageName, String testClassName, String testMethodName)
             throws DeviceNotAvailableException {
-        Utils.runDeviceTests(getDevice(), packageName, testClassName, testMethodName,
-                getDevice().getCurrentUser());
+        Utils.runDeviceTests(getDevice(), packageName, testClassName, testMethodName);
     }
 
     private void runDeviceTests(String packageName, String testClassName, String testMethodName,
             Map<String, String> testArgs) throws DeviceNotAvailableException {
-        Utils.runDeviceTests(getDevice(), packageName, testClassName, testMethodName,
-                getDevice().getCurrentUser(), testArgs);
+        Utils.runDeviceTests(getDevice(), packageName, testClassName, testMethodName, testArgs);
     }
 
     private void installApp(String apk) throws Exception {

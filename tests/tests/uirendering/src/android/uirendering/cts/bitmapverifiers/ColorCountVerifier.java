@@ -15,22 +15,15 @@
  */
 package android.uirendering.cts.bitmapverifiers;
 
-import android.uirendering.cts.util.CompareUtils;
 import android.util.Log;
 
 public class ColorCountVerifier extends BitmapVerifier {
     private int mColor;
     private int mCount;
-    private int mThreshold;
-
-    public ColorCountVerifier(int color, int count, int threshold) {
-        mColor = color;
-        mCount = count;
-        mThreshold = threshold;
-    }
 
     public ColorCountVerifier(int color, int count) {
-        this(color, count, 0);
+        mColor = color;
+        mCount = count;
     }
 
     @Override
@@ -38,8 +31,7 @@ public class ColorCountVerifier extends BitmapVerifier {
         int count = 0;
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                if (CompareUtils.verifyPixelWithThreshold(
-                        bitmap[indexFromXAndY(x, y, stride, offset)], mColor, mThreshold)) {
+                if (bitmap[indexFromXAndY(x, y, stride, offset)] == mColor) {
                     count++;
                 }
             }

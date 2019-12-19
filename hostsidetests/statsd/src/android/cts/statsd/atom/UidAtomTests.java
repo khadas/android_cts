@@ -46,7 +46,6 @@ import com.android.os.AtomsProto.WifiLockStateChanged;
 import com.android.os.AtomsProto.WifiMulticastLockStateChanged;
 import com.android.os.AtomsProto.WifiScanStateChanged;
 import com.android.os.StatsLog.EventMetricData;
-import com.android.tradefed.log.LogUtil;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -70,7 +69,6 @@ public class UidAtomTests extends DeviceAtomTestCase {
     private static final String FEATURE_AUDIO_OUTPUT = "android.hardware.audio.output";
     private static final String FEATURE_WATCH = "android.hardware.type.watch";
     private static final String FEATURE_PICTURE_IN_PICTURE = "android.software.picture_in_picture";
-    private static final String FEATURE_PC = "android.hardware.type.pc";
 
     private static final boolean DAVEY_ENABLED = false;
 
@@ -226,9 +224,10 @@ public class UidAtomTests extends DeviceAtomTestCase {
 
         runDeviceTests(DEVICE_SIDE_TEST_PACKAGE, ".AtomTests", "testSimpleCpu");
 
+        turnScreenOff();
         Thread.sleep(WAIT_TIME_SHORT);
-        setAppBreadcrumbPredicate();
-        Thread.sleep(WAIT_TIME_LONG);
+        turnScreenOn();
+        Thread.sleep(WAIT_TIME_SHORT);
 
         List<Atom> atomList = getGaugeMetricDataList();
 
@@ -261,11 +260,14 @@ public class UidAtomTests extends DeviceAtomTestCase {
 
         uploadConfig(config);
 
-        Thread.sleep(WAIT_TIME_LONG);
+        turnScreenOn();
+        Thread.sleep(WAIT_TIME_SHORT);
         runDeviceTests(DEVICE_SIDE_TEST_PACKAGE, ".AtomTests", "testSimpleCpu");
         Thread.sleep(WAIT_TIME_SHORT);
-        setAppBreadcrumbPredicate();
-        Thread.sleep(WAIT_TIME_LONG);
+        turnScreenOff();
+        Thread.sleep(WAIT_TIME_SHORT);
+        turnScreenOn();
+        Thread.sleep(WAIT_TIME_SHORT);
 
         List<Atom> atomList = getGaugeMetricDataList();
 
@@ -567,7 +569,6 @@ public class UidAtomTests extends DeviceAtomTestCase {
             return;
         }
         if (!hasFeature(FEATURE_WIFI, true)) return;
-        if (!hasFeature(FEATURE_PC, false)) return;
 
         final int atomTag = Atom.WIFI_LOCK_STATE_CHANGED_FIELD_NUMBER;
         Set<Integer> lockOn = new HashSet<>(Arrays.asList(WifiLockStateChanged.State.ON_VALUE));
@@ -592,7 +593,6 @@ public class UidAtomTests extends DeviceAtomTestCase {
             return;
         }
         if (!hasFeature(FEATURE_WIFI, true)) return;
-        if (!hasFeature(FEATURE_PC, false)) return;
 
         final int atomTag = Atom.WIFI_MULTICAST_LOCK_STATE_CHANGED_FIELD_NUMBER;
         Set<Integer> lockOn = new HashSet<>(
@@ -702,14 +702,8 @@ public class UidAtomTests extends DeviceAtomTestCase {
         if (statsdDisabled()) {
             return;
         }
-        String supported = getDevice().executeShellCommand("am supports-multiwindow");
         if (!hasFeature(FEATURE_WATCH, false) ||
-            !hasFeature(FEATURE_PICTURE_IN_PICTURE, true) ||
-            !supported.contains("true")) {
-            LogUtil.CLog.d("Skipping picture in picture atom test.");
-            return;
-        }
-
+            !hasFeature(FEATURE_PICTURE_IN_PICTURE, true)) return;
         final int atomTag = Atom.PICTURE_IN_PICTURE_STATE_CHANGED_FIELD_NUMBER;
 
         Set<Integer> entered = new HashSet<>(
@@ -720,7 +714,6 @@ public class UidAtomTests extends DeviceAtomTestCase {
 
         createAndUploadConfig(atomTag, false);
 
-        LogUtil.CLog.d("Playing video in Picture-in-Picture mode");
         runActivity("VideoPlayerActivity", "action", "action.play_video_picture_in_picture_mode");
 
         // Sorted list of events in order in which they occurred.

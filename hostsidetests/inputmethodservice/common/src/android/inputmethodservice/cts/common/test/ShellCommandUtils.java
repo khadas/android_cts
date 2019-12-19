@@ -36,20 +36,9 @@ public final class ShellCommandUtils {
         return "settings get " + SETTING_DEFAULT_IME;
     }
 
-    /** Command to set current IME to {@code imeId} synchronously */
-    public static String setCurrentImeSync(final String imeId) {
-        return "ime set " + imeId;
-    }
-
-    public static String getEnabledImes() {
-        return "ime list -s";
-    }
-    public static String getAvailableImes() {
-        return "ime list -s -a";
-    }
-
-    public static String listPackage(String packageName) {
-        return "pm list package " + packageName;
+    /** Command to set current IME to {@code imeId}. */
+    public static String setCurrentIme(final String imeId) {
+        return "settings put " + SETTING_DEFAULT_IME + " " + imeId;
     }
 
     /** Command to enable IME of {@code imeId}. */

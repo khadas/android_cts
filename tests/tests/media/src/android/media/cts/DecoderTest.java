@@ -709,14 +709,8 @@ public class DecoderTest extends MediaPlayerTestBase {
     }
 
     public void testH265HDR10StaticMetadata() throws Exception {
-        // Expected value of MediaFormat.KEY_HDR_STATIC_INFO key.
-        // The associated value is a ByteBuffer. This buffer contains the raw contents of the
-        // Static Metadata Descriptor (including the descriptor ID) of an HDMI Dynamic Range and
-        // Mastering InfoFrame as defined by CTA-861.3.
-        // Media frameworks puts the display primaries in RGB order, here we verify the three
-        // primaries are indeed in this order and fail otherwise.
         final String staticInfo =
-                "00 d0 84 80 3e c2 33 c4  86 4c 1d b8 0b 13 3d 42" +
+                "00 c2 33 c4 86 4c 1d b8  0b d0 84 80 3e 13 3d 42" +
                 "40 e8 03 00 00 e8 03 90  01                     " ;
         testHdrStaticMetadata(R.raw.video_1280x720_hevc_hdr10_static_3mbps,
                 staticInfo, false /*metadataInContainer*/);
@@ -2421,19 +2415,7 @@ public class DecoderTest extends MediaPlayerTestBase {
         // start decode loop
         MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
 
-        MediaFormat outFormat = codec.getOutputFormat();
-        long kTimeOutUs = 5000; // 5ms timeout
-        String outMime = format.getString(MediaFormat.KEY_MIME);
-        if ((surface == null) && (outMime != null) && outMime.startsWith("video/")) {
-            int outWidth = outFormat.getInteger(MediaFormat.KEY_WIDTH);
-            int outHeight = outFormat.getInteger(MediaFormat.KEY_HEIGHT);
-            // in the 4K decoding case in byte buffer mode, set kTimeOutUs to 10ms as decode may
-            // involve a memcpy
-            if (outWidth * outHeight >= 8000000) {
-                kTimeOutUs = 10000;
-            }
-        }
-
+        final long kTimeOutUs = 5000; // 5ms timeout
         boolean sawInputEOS = false;
         boolean sawOutputEOS = false;
         int deadDecoderCounter = 0;

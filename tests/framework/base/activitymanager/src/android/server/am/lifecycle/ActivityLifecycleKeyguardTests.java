@@ -22,9 +22,6 @@ public class ActivityLifecycleKeyguardTests extends ActivityLifecycleClientTestB
 
     @Test
     public void testSingleLaunch() throws Exception {
-        if (!supportsSecureLock()) {
-            return;
-        }
         try (final LockScreenSession lockScreenSession = new LockScreenSession()) {
             lockScreenSession.setLockCredential().gotoKeyguard();
 

@@ -93,18 +93,11 @@ final class UiBot {
             "autofill_picker_accessibility_title";
     private static final String RESOURCE_STRING_SAVE_SNACKBAR_ACCESSIBILITY_TITLE =
             "autofill_save_accessibility_title";
-    private static final String RESOURCE_BOOLEAN_CONFIG_FORCE_DEFAULT_ORIENTATION =
-            "config_forceDefaultOrientation";
-
 
     static final BySelector DATASET_PICKER_SELECTOR = By.res("android", RESOURCE_ID_DATASET_PICKER);
     private static final BySelector SAVE_UI_SELECTOR = By.res("android", RESOURCE_ID_SAVE_SNACKBAR);
     private static final BySelector DATASET_HEADER_SELECTOR =
             By.res("android", RESOURCE_ID_DATASET_HEADER);
-
-    // TODO: figure out a more reliable solution that does not depend on SystemUI resources.
-    private static final String SPLIT_WINDOW_DIVIDER_ID =
-            "com.android.systemui:id/docked_divider_background";
 
     private static final boolean DUMP_ON_ERROR = true;
 
@@ -852,40 +845,6 @@ final class UiBot {
             }
         } else {
             assertWithMessage("Shouldn't find child with id '%s'", childId).that(child).isNull();
-        }
-    }
-
-    /**
-     * Waits until the window was split to show multiple activities.
-     */
-    public void waitForWindowSplit() throws Exception {
-        try {
-            assertShownById(SPLIT_WINDOW_DIVIDER_ID);
-        } catch (Exception e) {
-            final long timeout = Timeouts.ACTIVITY_RESURRECTION.ms();
-            Log.e(TAG, "Did not find window divider " + SPLIT_WINDOW_DIVIDER_ID + "; waiting "
-                    + timeout + "ms instead");
-            SystemClock.sleep(timeout);
-        }
-    }
-
-    private boolean getBoolean(String id) {
-        final Resources resources = mContext.getResources();
-        final int booleanId = resources.getIdentifier(id, "bool", "android");
-        return resources.getBoolean(booleanId);
-    }
-
-    /**
-     * Returns {@code true} if display rotation is supported, {@code false} otherwise.
-     */
-    public boolean isScreenRotationSupported() {
-        try {
-            return !getBoolean(RESOURCE_BOOLEAN_CONFIG_FORCE_DEFAULT_ORIENTATION);
-        } catch (Resources.NotFoundException e) {
-            Log.d(TAG, "Resource not found: "
-                    + RESOURCE_BOOLEAN_CONFIG_FORCE_DEFAULT_ORIENTATION
-                    + ". Assume rotation supported");
-            return true;
         }
     }
 }

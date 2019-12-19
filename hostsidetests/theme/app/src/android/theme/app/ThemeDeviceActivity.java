@@ -18,7 +18,6 @@ package android.theme.app;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.theme.app.modifiers.DatePickerModifier;
@@ -77,11 +76,6 @@ public class ThemeDeviceActivity extends Activity {
         mTheme = THEMES[themeIndex];
 
         setTheme(mTheme.id);
-
-        // Force text scaling to 1.0 regardless of system default.
-        Configuration config = new Configuration();
-        config.fontScale = 1.0f;
-        getResources().updateConfiguration(config, null);
         setContentView(R.layout.theme_test);
 
         mViewGroup = (ReferenceViewGroup) findViewById(R.id.reference_view_group);

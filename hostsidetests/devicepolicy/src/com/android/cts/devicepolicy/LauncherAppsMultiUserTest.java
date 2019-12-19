@@ -42,8 +42,7 @@ public class LauncherAppsMultiUserTest extends BaseLauncherAppsTest {
 
         if (mMultiUserSupported) {
             removeTestUsers();
-            uninstallTestApps();
-            installTestApps(mPrimaryUserId);
+            installTestApps();
             // Create a secondary user.
             mSecondaryUserId = createUser();
             mSecondaryUserSerialNumber = Integer.toString(getUserSerialNumber(mSecondaryUserId));
@@ -76,7 +75,7 @@ public class LauncherAppsMultiUserTest extends BaseLauncherAppsTest {
         if (!mMultiUserSupported) {
             return;
         }
-        startCallbackService(mPrimaryUserId);
+        startCallbackService();
         installAppAsUser(SIMPLE_APP_APK, mPrimaryUserId);
         runDeviceTestsAsUser(LAUNCHER_TESTS_PKG,
                 LAUNCHER_TESTS_CLASS,

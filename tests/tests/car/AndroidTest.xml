@@ -23,5 +23,4 @@
     <test class="com.android.tradefed.testtype.AndroidJUnitTest" >
         <option name="package" value="android.car.cts" />
     </test>
-    <object type="module_controller" class="com.android.tradefed.testtype.suite.module.CarModuleController"/>
 </configuration>

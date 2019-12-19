@@ -350,12 +350,7 @@ public class AnimatedImageDrawableTest {
 
             drawable.start();
             assertTrue(drawable.isRunning());
-        });
 
-        cb.waitForStart();
-        cb.assertStarted(true);
-
-        mActivityRule.runOnUiThread(() -> {
             drawable.stop();
             assertFalse(drawable.isRunning());
         });
@@ -363,6 +358,7 @@ public class AnimatedImageDrawableTest {
         // This duration may be overkill, but we need to wait for the message
         // to post. Increasing it should help with flakiness on bots.
         cb.waitForEnd(DURATION * 3);
+        cb.assertStarted(true);
         cb.assertEnded(true);
     }
 

@@ -22,7 +22,6 @@ import java.lang.reflect.Method;
 
 @SecurityTest
 public class PutOverflowTest extends AndroidTestCase {
-    @SecurityTest(minPatchLevel = "2015-02")
     public void testCrash() throws Exception {
         try {
             Class<?> keystoreClass = Class.forName("android.security.KeyStore");

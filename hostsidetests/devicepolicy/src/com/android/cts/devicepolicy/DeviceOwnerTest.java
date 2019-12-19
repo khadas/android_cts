@@ -408,42 +408,34 @@ public class DeviceOwnerTest extends BaseDevicePolicyTest {
         if (!mHasFeature) {
             return;
         }
-        // Backup stay awake setting because testGenerateLogs() will turn it off.
-        final String stayAwake = getDevice().getSetting("global", "stay_on_while_plugged_in");
-        try {
-            // Turn logging on.
-            executeDeviceTestMethod(".SecurityLoggingTest", "testEnablingSecurityLogging");
-            // Reboot to ensure ro.device_owner is set to true in logd and logging is on.
-            rebootAndWaitUntilReady();
 
-            // Generate various types of events on device side and check that they are logged.
-            executeDeviceTestMethod(".SecurityLoggingTest", "testGenerateLogs");
+        // Turn logging on.
+        executeDeviceTestMethod(".SecurityLoggingTest", "testEnablingSecurityLogging");
+        // Reboot to ensure ro.device_owner is set to true in logd and logging is on.
+        rebootAndWaitUntilReady();
+
+        // Generate various types of events on device side and check that they are logged.
+        executeDeviceTestMethod(".SecurityLoggingTest", "testGenerateLogs");
+        getDevice().executeShellCommand("dpm force-security-logs");
+        executeDeviceTestMethod(".SecurityLoggingTest", "testVerifyGeneratedLogs");
+
+        // Reboot the device, so the security event ids are reset.
+        rebootAndWaitUntilReady();
+
+        // Verify event ids are consistent across a consecutive batch.
+        for (int batchNumber = 0; batchNumber < 3; batchNumber++) {
+            generateDummySecurityLogs();
             getDevice().executeShellCommand("dpm force-security-logs");
-            executeDeviceTestMethod(".SecurityLoggingTest", "testVerifyGeneratedLogs");
-
-            // Reboot the device, so the security event ids are reset.
-            rebootAndWaitUntilReady();
-
-            // Verify event ids are consistent across a consecutive batch.
-            for (int batchNumber = 0; batchNumber < 3; batchNumber++) {
-                generateDummySecurityLogs();
-                getDevice().executeShellCommand("dpm force-security-logs");
-                executeDeviceTestMethod(".SecurityLoggingTest", "testVerifyLogIds",
-                        Collections.singletonMap(ARG_SECURITY_LOGGING_BATCH_NUMBER,
-                                Integer.toString(batchNumber)));
-            }
-
-            // Immediately attempting to fetch events again should fail.
-            executeDeviceTestMethod(".SecurityLoggingTest",
-                    "testSecurityLoggingRetrievalRateLimited");
-            // Turn logging off.
-            executeDeviceTestMethod(".SecurityLoggingTest", "testDisablingSecurityLogging");
-        } finally {
-            // Restore stay awake setting.
-            if (stayAwake != null) {
-                getDevice().setSetting("global", "stay_on_while_plugged_in", stayAwake);
-            }
+            executeDeviceTestMethod(".SecurityLoggingTest", "testVerifyLogIds",
+                    Collections.singletonMap(ARG_SECURITY_LOGGING_BATCH_NUMBER,
+                            Integer.toString(batchNumber)));
         }
+
+        // Immediately attempting to fetch events again should fail.
+        executeDeviceTestMethod(".SecurityLoggingTest",
+                "testSecurityLoggingRetrievalRateLimited");
+        // Turn logging off.
+        executeDeviceTestMethod(".SecurityLoggingTest", "testDisablingSecurityLogging");
     }
 
     private void generateDummySecurityLogs() throws DeviceNotAvailableException {
@@ -543,24 +535,6 @@ public class DeviceOwnerTest extends BaseDevicePolicyTest {
             // Check that kiosk mode is working and can't be interrupted
             runDeviceTestsAsUser(DEVICE_OWNER_PKG, ".LockTaskHostDrivenTest",
                     "testLockTaskIsActiveAndCantBeInterrupted", mPrimaryUserId);
-        } finally {
-            runDeviceTestsAsUser(DEVICE_OWNER_PKG, ".LockTaskHostDrivenTest",
-                    "clearDefaultHomeIntentReceiver", mPrimaryUserId);
-        }
-    }
-
-    public void testLockTaskAfterReboot_tryOpeningSettings_deviceOwnerUser() throws Exception {
-        if (!mHasFeature) {
-            return;
-        }
-
-        try {
-            // Just start kiosk mode
-            runDeviceTestsAsUser(DEVICE_OWNER_PKG, ".LockTaskHostDrivenTest", "startLockTask",
-                    mPrimaryUserId);
-
-            // Reboot while in kiosk mode and then unlock the device
-            getDevice().reboot();
 
             // Try to open settings via adb
             executeShellCommand("am start -a android.settings.SETTINGS");

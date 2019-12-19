@@ -524,7 +524,7 @@ public class NotificationManagerTest extends AndroidTestCase {
 
         int id = 1;
         final Notification notification =
-                new Notification.Builder(mContext, mId)
+                new Notification.Builder(mContext, NOTIFICATION_CHANNEL_ID)
                         .setSmallIcon(R.drawable.black)
                         .setWhen(System.currentTimeMillis())
                         .setContentTitle("notify#" + id)
@@ -550,7 +550,7 @@ public class NotificationManagerTest extends AndroidTestCase {
 
         int id = 1;
         final Notification notification =
-                new Notification.Builder(mContext, mId)
+                new Notification.Builder(mContext, NOTIFICATION_CHANNEL_ID)
                         .setSmallIcon(R.drawable.black)
                         .setWhen(System.currentTimeMillis())
                         .setContentTitle("notify#" + id)

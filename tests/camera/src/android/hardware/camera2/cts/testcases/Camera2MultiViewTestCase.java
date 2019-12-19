@@ -72,6 +72,7 @@ public class Camera2MultiViewTestCase extends
     protected Handler mHandler;
 
     private CameraManager mCameraManager;
+    private BlockingStateCallback mCameraListener;
     private HandlerThread mHandlerThread;
     private Context mContext;
 
@@ -96,6 +97,7 @@ public class Camera2MultiViewTestCase extends
         mHandlerThread = new HandlerThread(TAG);
         mHandlerThread.start();
         mHandler = new Handler(mHandlerThread.getLooper());
+        mCameraListener = new BlockingStateCallback();
         Camera2MultiViewCtsActivity activity = (Camera2MultiViewCtsActivity) mContext;
         for (int i = 0; i < Camera2MultiViewCtsActivity.MAX_TEXTURE_VIEWS; i++) {
             mTextureView[i] = activity.getTextureView(i);
@@ -123,6 +125,7 @@ public class Camera2MultiViewTestCase extends
                 mCameraIds.length == cameraIdsPostTest.length);
         mHandlerThread.quitSafely();
         mHandler = null;
+        mCameraListener = null;
         for (CameraHolder camera : mCameraHolders) {
             if (camera.isOpened()) {
                 camera.close();
@@ -408,8 +411,6 @@ public class Camera2MultiViewTestCase extends
     // Per device fields
     private class CameraHolder {
         private String mCameraId;
-        private CameraStateListener mCameraStateListener;
-        private BlockingStateCallback mBlockingStateListener;
         private CameraCaptureSession mSession;
         private CameraDevice mCamera;
         private StaticMetadata mStaticInfo;
@@ -418,7 +419,6 @@ public class Camera2MultiViewTestCase extends
 
         public CameraHolder(String id){
             mCameraId = id;
-            mCameraStateListener = new CameraStateListener();
         }
 
         public StaticMetadata getStaticInfo() {
@@ -429,34 +429,10 @@ public class Camera2MultiViewTestCase extends
             return mOrderedPreviewSizes;
         }
 
-        class CameraStateListener extends CameraDevice.StateCallback {
-            boolean mDisconnected = false;
-
-            @Override
-            public void onOpened(CameraDevice camera) {
-            }
-
-            @Override
-            public void onDisconnected(CameraDevice camera) {
-                synchronized(this) {
-                    mDisconnected = true;
-                }
-            }
-
-            @Override
-            public void onError(CameraDevice camera, int error) {
-            }
-
-            public synchronized boolean isDisconnected() {
-                return mDisconnected;
-            }
-        }
-
         public void open() throws Exception {
             assertNull("Camera is already opened", mCamera);
-            mBlockingStateListener = new BlockingStateCallback(mCameraStateListener);
             mCamera = (new BlockingCameraManager(mCameraManager)).openCamera(
-                    mCameraId, mBlockingStateListener, mHandler);
+                    mCameraId, mCameraListener, mHandler);
             mStaticInfo = new StaticMetadata(mCameraManager.getCameraCharacteristics(mCameraId),
                     CheckLevel.ASSERT, /*collector*/null);
             if (mStaticInfo.isColorOutputSupported()) {
@@ -468,7 +444,7 @@ public class Camera2MultiViewTestCase extends
         }
 
         public boolean isOpened() {
-            return (mCamera != null && !mCameraStateListener.isDisconnected());
+            return (mCamera != null);
         }
 
         public void close() throws Exception {
@@ -476,12 +452,11 @@ public class Camera2MultiViewTestCase extends
                 return;
             }
             mCamera.close();
-            mBlockingStateListener.waitForState(STATE_CLOSED, CAMERA_CLOSE_TIMEOUT_MS);
+            mCameraListener.waitForState(STATE_CLOSED, CAMERA_CLOSE_TIMEOUT_MS);
             mCamera = null;
             mSession = null;
             mStaticInfo = null;
             mOrderedPreviewSizes = null;
-            mBlockingStateListener = null;
         }
 
         public void startPreview(List<Surface> outputSurfaces, CaptureCallback listener)
@@ -577,9 +552,6 @@ public class Camera2MultiViewTestCase extends
         public void stopPreview() throws Exception {
             if (VERBOSE) Log.v(TAG,
                     "Stopping camera " + mCameraId +" preview and waiting for idle");
-            if (!isOpened()) {
-                return;
-            }
             // Stop repeat, wait for captures to complete, and disconnect from surfaces
             mSession.close();
             mSessionListener.getStateWaiter().waitForState(

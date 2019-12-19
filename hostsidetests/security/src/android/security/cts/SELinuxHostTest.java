@@ -386,8 +386,7 @@ public class SELinuxHostTest extends DeviceTestCase implements IBuildReceiver, I
      */
     public static boolean isFullTrebleDevice(ITestDevice device)
             throws DeviceNotAvailableException {
-        return PropertyUtil.getFirstApiLevel(device) > 26 &&
-                PropertyUtil.propertyEquals(device, "ro.treble.enabled", "true");
+        return PropertyUtil.getFirstApiLevel(device) > 26;
     }
 
     private boolean isFullTrebleDevice() throws DeviceNotAvailableException {
@@ -400,8 +399,7 @@ public class SELinuxHostTest extends DeviceTestCase implements IBuildReceiver, I
      */
     public static boolean isCompatiblePropertyEnforcedDevice(ITestDevice device)
             throws DeviceNotAvailableException {
-        return PropertyUtil.propertyEquals(
-                device, "ro.actionable_compatible_property.enabled", "true");
+        return PropertyUtil.getFirstApiLevel(device) > 27;
     }
 
     // NOTE: cts/tools/selinux depends on this method. Rename/change with caution.
@@ -891,9 +889,6 @@ public class SELinuxHostTest extends DeviceTestCase implements IBuildReceiver, I
      * @throws Exception
      */
     public void testCoredomainViolators() throws Exception {
-        if (!isFullTrebleDevice()) {
-            return;
-        }
         assertSepolicyTests("CoredomainViolations", "/treble_sepolicy_tests");
     }
 

@@ -36,6 +36,7 @@ LOCAL_STATIC_LIBRARIES += \
   libLLVMSupport \
   libprotobuf-cpp-lite \
   libevent \
+  libc \
 
 LOCAL_POST_LINK_CMD =  \
   TMP_FILE=`mktemp $(OUT_DIR)/simpleperf-post-link-XXXXXXXXXX` && \
@@ -46,6 +47,7 @@ LOCAL_POST_LINK_CMD =  \
 LOCAL_COMPATIBILITY_SUITE := cts vts general-tests
 
 LOCAL_CTS_TEST_PACKAGE := android.simpleperf
+LOCAL_FORCE_STATIC_EXECUTABLE := true
 include $(LLVM_DEVICE_BUILD_MK)
 include $(BUILD_CTS_EXECUTABLE)
 

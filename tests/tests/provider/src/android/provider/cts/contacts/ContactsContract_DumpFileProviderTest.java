@@ -29,6 +29,7 @@ public class ContactsContract_DumpFileProviderTest extends AndroidTestCase {
     private static final String[] NOT_ALLOWED_FILES = {
             "not_allowed.txt",
             "../A-contacts-db.zip",   // ".." is not allowed.
+            "/A-contacts-db.zip",     // "/" is not allowed
             "-contacts-db.zip",       // no name prefix
             "asdf-contacts-db.zip"};
 
@@ -87,7 +88,7 @@ public class ContactsContract_DumpFileProviderTest extends AndroidTestCase {
             return;
         }
 
-        fail("IllegalArgumentException expected but not thrown: " + uri);
+        fail("IllegalArgumentException expected but not thrown.");
     }
 
     private void assertOpenFileDescriptorThrowsError(Uri uri) {
@@ -100,6 +101,6 @@ public class ContactsContract_DumpFileProviderTest extends AndroidTestCase {
 
         }
 
-        fail("IllegalArgumentException expected but not thrown: " + uri);
+        fail("IllegalArgumentException expected but not thrown.");
     }
 }

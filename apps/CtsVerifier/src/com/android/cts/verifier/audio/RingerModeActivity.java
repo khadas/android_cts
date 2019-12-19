@@ -118,8 +118,7 @@ public class RingerModeActivity extends InteractiveVerifierActivity {
         tests.add(new TestVibrateNotificationDndOn());
         tests.add(new TestVibrateRingerDndOn());
         tests.add(new TestSetRingerModePolicyAccessDndOn());
-        // TODO: Add a @TestApi method to query the VolumPolicy
-        //tests.add(new TestVolumeDndAffectedStreamDndOn());
+        tests.add(new TestVolumeDndAffectedStreamDndOn());
         tests.add(new TestAdjustVolumeInPriorityOnlyAllowAlarmsMediaMode());
 
         tests.add(new SetModeAllTest());
@@ -127,8 +126,7 @@ public class RingerModeActivity extends InteractiveVerifierActivity {
         tests.add(new TestVibrateNotification());
         tests.add(new TestVibrateRinger());
         tests.add(new TestSetRingerModePolicyAccess());
-        // TODO: Add a @TestApi method to query the VolumPolicy
-        //tests.add(new TestVolumeDndAffectedStream());
+        tests.add(new TestVolumeDndAffectedStream());
         tests.add(new TestVolume());
         tests.add(new TestMuteStreams());
         tests.add(new EnableSoundEffects());
@@ -634,9 +632,14 @@ public class RingerModeActivity extends InteractiveVerifierActivity {
                 return;
             }
 
+            mAudioManager.setRingerMode(RINGER_MODE_VIBRATE);
             if (mHasVibrator) {
-                mAudioManager.setRingerMode(RINGER_MODE_VIBRATE);
                 if (RINGER_MODE_VIBRATE != mAudioManager.getRingerMode()) {
+                    setFailed();
+                    return;
+                }
+            } else {
+                if (RINGER_MODE_NORMAL != mAudioManager.getRingerMode()) {
                     setFailed();
                     return;
                 }

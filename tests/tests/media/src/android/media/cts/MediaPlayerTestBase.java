@@ -156,7 +156,6 @@ public class MediaPlayerTestBase extends ActivityInstrumentationTestCase2<MediaS
         boolean playedSuccessfully = false;
         for (int i = 0; i < STREAM_RETRIES; i++) {
           try {
-            mMediaPlayer.reset();
             mMediaPlayer.setDataSource(path);
             playLoadedVideo(width, height, playTime);
             playedSuccessfully = true;
@@ -189,7 +188,6 @@ public class MediaPlayerTestBase extends ActivityInstrumentationTestCase2<MediaS
         boolean playedSuccessfully = false;
         for (int i = 0; i < STREAM_RETRIES; i++) {
             try {
-                mMediaPlayer.reset();
                 mMediaPlayer.setDataSource(getInstrumentation().getTargetContext(),
                         uri, headers, cookies);
                 playLoadedVideo(width, height, playTime);

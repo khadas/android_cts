@@ -18,13 +18,9 @@ package android.hardware.cts;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.hardware.Sensor;
 import android.hardware.SensorDirectChannel;
 import android.hardware.SensorManager;
-import android.os.Build;
-
-import com.android.compatibility.common.util.PropertyUtil;
 
 /**
  * Checks if Hifi sensors  or VR High performance mode sensors
@@ -43,7 +39,6 @@ public class SensorSupportTest extends SensorTestCase {
     private SensorManager mSensorManager;
     private boolean mAreHifiSensorsSupported;
     private boolean mVrHighPerformanceModeSupported;
-    private boolean mIsVrHeadset;
 
     @Override
     public void setUp() {
@@ -51,8 +46,6 @@ public class SensorSupportTest extends SensorTestCase {
         // Tests will only run if either HIFI_SENSORS or VR high performance mode is supported.
         mAreHifiSensorsSupported = pm.hasSystemFeature(PackageManager.FEATURE_HIFI_SENSORS);
         mVrHighPerformanceModeSupported = pm.hasSystemFeature(PackageManager.FEATURE_VR_MODE_HIGH_PERFORMANCE);
-        mIsVrHeadset = (getContext().getResources().getConfiguration().uiMode
-            & Configuration.UI_MODE_TYPE_MASK) == Configuration.UI_MODE_TYPE_VR_HEADSET;
         if (mAreHifiSensorsSupported || mVrHighPerformanceModeSupported) {
             mSensorManager =
                     (SensorManager) getContext().getSystemService(Context.SENSOR_SERVICE);
@@ -64,10 +57,7 @@ public class SensorSupportTest extends SensorTestCase {
     }
 
     public void testSupportsAccelerometerUncalibrated() {
-        // Uncalibrated accelerometer was not required before Android O
-        if (PropertyUtil.getFirstApiLevel() >= Build.VERSION_CODES.O) {
-            checkSupportsSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED);
-        }
+        checkSupportsSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED);
     }
 
     public void testSupportsGyroscope() {
@@ -130,7 +120,7 @@ public class SensorSupportTest extends SensorTestCase {
         if (mAreHifiSensorsSupported || isVrSensor) {
             Sensor sensor = mSensorManager.getDefaultSensor(sensorType);
             assertTrue(sensor != null);
-            if (isVrSensor && mIsVrHeadset) {
+            if (isVrSensor) {
                 assertTrue(sensor.isDirectChannelTypeSupported(SensorDirectChannel.TYPE_HARDWARE_BUFFER));
             }
         }

@@ -152,9 +152,8 @@ public class DeviceAtomTestCase extends AtomTestCase {
      * Gets the uid of the test app.
      */
     protected int getUid() throws Exception {
-        int currentUser = getDevice().getCurrentUser();
-        String uidLine = getDevice().executeShellCommand("cmd package list packages -U --user "
-                + currentUser + " " + DEVICE_SIDE_TEST_PACKAGE);
+        String uidLine = getDevice().executeShellCommand("cmd package list packages -U "
+                + DEVICE_SIDE_TEST_PACKAGE);
         String[] uidLineParts = uidLine.split(":");
         // 3rd entry is package uid
         assertTrue(uidLineParts.length > 2);

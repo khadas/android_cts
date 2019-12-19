@@ -49,7 +49,6 @@ public class JvmtiAttachingHostTest extends DeviceTestCase implements IBuildRece
 
     private CompatibilityBuildHelper mBuildHelper;
     private IAbi mAbi;
-    private int mCurrentUser;
 
     @Override
     public void setBuild(IBuildInfo arg0) {
@@ -67,11 +66,6 @@ public class JvmtiAttachingHostTest extends DeviceTestCase implements IBuildRece
 
     private final static String AGENT = "libctsjvmtiattachagent.so";
 
-    @Override
-    protected void setUp() throws Exception {
-        mCurrentUser = getDevice().getCurrentUser();
-    }
-
     public void testJvmtiAttachDuringBind() throws Exception {
         runJvmtiAgentLoadTest((ITestDevice device, String pkg, String apk, String abiName) -> {
             try {
@@ -85,8 +79,7 @@ public class JvmtiAttachingHostTest extends DeviceTestCase implements IBuildRece
     public void testJvmtiAttachEarly() throws Exception {
         runJvmtiAgentLoadTest((ITestDevice device, String pkg, String apk, String abiName) -> {
             try {
-                String pwd = device.executeShellCommand(
-                        "run-as " + pkg + " --user " + mCurrentUser + " pwd");
+                String pwd = device.executeShellCommand("run-as " + pkg + " pwd");
                 if (pwd == null) {
                     throw new RuntimeException("pwd failed");
                 }
@@ -132,8 +125,7 @@ public class JvmtiAttachingHostTest extends DeviceTestCase implements IBuildRece
     public void testJvmtiAgentAppExternal() throws Exception {
         runJvmtiAgentLoadTest((ITestDevice device, String pkg, String apk, String abiName) -> {
             try {
-                String pwd = device.executeShellCommand(
-                        "run-as " + pkg + " --user " + mCurrentUser + " pwd");
+                String pwd = device.executeShellCommand("run-as " + pkg + " pwd");
                 if (pwd == null) {
                     throw new RuntimeException("pwd failed");
                 }
@@ -227,14 +219,13 @@ public class JvmtiAttachingHostTest extends DeviceTestCase implements IBuildRece
             }
 
             String runAsCp = device.executeShellCommand(
-                    "run-as " + pkg + " --user " + mCurrentUser +
-                            " cp " + libInTmp + " " + libInDataData);
+                    "run-as " + pkg + " cp " + libInTmp + " " + libInDataData);
             if (runAsCp != null && !runAsCp.trim().isEmpty()) {
                 throw new RuntimeException(runAsCp.trim());
             }
 
-            String runAsChmod = device.executeShellCommand(
-                    "run-as " + pkg + " --user " + mCurrentUser + " chmod a+x " + libInDataData);
+            String runAsChmod = device
+                    .executeShellCommand("run-as " + pkg + " chmod a+x " + libInDataData);
             if (runAsChmod != null && !runAsChmod.trim().isEmpty()) {
                 throw new RuntimeException(runAsChmod.trim());
             }

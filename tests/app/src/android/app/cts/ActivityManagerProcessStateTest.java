@@ -16,6 +16,7 @@
 
 package android.app.cts;
 
+import android.Manifest;
 import android.accessibilityservice.AccessibilityService;
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -914,12 +915,10 @@ public class ActivityManagerProcessStateTest extends InstrumentationTestCase {
      * Test that the foreground service app op does prevent the foreground state.
      */
     public void testForegroundServiceAppOp() throws Exception {
-        // Use default timeout value 5000
         final ServiceProcessController controller = new ServiceProcessController(mContext,
-                getInstrumentation(), STUB_PACKAGE_NAME, mAllProcesses);
-        // Use default timeout value 5000
+                getInstrumentation(), STUB_PACKAGE_NAME, mAllProcesses, WAIT_TIME);
         final ServiceConnectionHandler conn = new ServiceConnectionHandler(mContext,
-                mServiceIntent);
+                mServiceIntent, WAIT_TIME);
         final WatchUidRunner uidWatcher = controller.getUidWatcher();
 
         try {
@@ -1009,8 +1008,7 @@ public class ActivityManagerProcessStateTest extends InstrumentationTestCase {
             uidWatcher.waitFor(WatchUidRunner.CMD_ACTIVE, null);
             uidWatcher.waitFor(WatchUidRunner.CMD_UNCACHED, null);
             uidWatcher.waitFor(WatchUidRunner.CMD_PROCSTATE, WatchUidRunner.STATE_FG_SERVICE);
-            // Remove tempwhitelist avoid temp white list block idle command and app crash occur.
-            executeShellCmd("cmd deviceidle tempwhitelist -r " + SIMPLE_PACKAGE_NAME);
+
             // Good, now stop the service and wait for it to go away.
             mContext.stopService(mServiceStartForegroundIntent);
             conn.waitForDisconnect();
@@ -1021,6 +1019,7 @@ public class ActivityManagerProcessStateTest extends InstrumentationTestCase {
 
             // We don't want to wait for the uid to actually go idle, we can force it now.
             controller.makeUidIdle();
+            uidWatcher.expect(WatchUidRunner.CMD_IDLE, null);
 
             // Make sure the process is gone so we start over fresh.
             controller.ensureProcessGone();

@@ -58,7 +58,6 @@ public class BitmapFactorySecurityTests extends AndroidTestCase {
     /**
      * Verifies that decoding a corrupt ICO does crash.
      */
-    @SecurityTest(minPatchLevel = "2017-09")
     public void test_android_bug_38116746() {
         FileDescriptor exploitImage = getResource(R.raw.bug_38116746);
         try {
@@ -74,7 +73,6 @@ public class BitmapFactorySecurityTests extends AndroidTestCase {
     /**
      * Verifies that decoding a corrupt BMP does crash.
      */
-    @SecurityTest(minPatchLevel = "2017-08")
     public void test_android_bug_37627194() {
         FileDescriptor exploitImage = getResource(R.raw.bug_37627194);
         try {

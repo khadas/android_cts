@@ -26,21 +26,10 @@ import com.android.compatibility.common.util.PropertyUtil;
 public class VerifiedBootTest extends AndroidTestCase {
   private static final String TAG = "VerifiedBootTest";
 
-  private static boolean isLowRamExempt(PackageManager pm) {
-    if (pm.hasSystemFeature(PackageManager.FEATURE_RAM_NORMAL)) {
-      // No exemption for normal RAM
-      return false;
-    }
-    return (PropertyUtil.getFirstApiLevel() < Build.VERSION_CODES.P);
-  }
-
   /**
-   * Asserts that Verified Boot is supported.
-   *
-   * A device is exempt if it launched on a pre-O_MR1 level.
-   *
-   * A device without the feature flag android.hardware.ram.normal is exempt if
-   * it launched on a pre-P level.
+   * Asserts that Verified Boot is supported on devices that report the feature flag
+   * android.hardware.ram.normal. If a device launched on a pre-O_MR1 level without verified boot
+   * then it is exempt from this requirement.
    */
   public void testVerifiedBootSupport() throws Exception {
     if (PropertyUtil.getFirstApiLevel() < Build.VERSION_CODES.O_MR1) {
@@ -48,10 +37,11 @@ public class VerifiedBootTest extends AndroidTestCase {
     }
     PackageManager pm = getContext().getPackageManager();
     assertNotNull("PackageManager must not be null", pm);
-    if (isLowRamExempt(pm)) {
+    boolean isRAMNormal = pm.hasSystemFeature(PackageManager.FEATURE_RAM_NORMAL);
+    if (!isRAMNormal) {
       return;
     }
-    assertTrue("Verified boot must be supported on the device",
+    assertTrue("Verified boot must be supported on a device with normal RAM",
         pm.hasSystemFeature(PackageManager.FEATURE_VERIFIED_BOOT));
   }
 }

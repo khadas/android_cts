@@ -42,7 +42,7 @@ import android.se.omapi.SEService;
 import android.se.omapi.SEService.OnConnectedListener;
 import android.se.omapi.Session;
 import android.support.test.InstrumentationRegistry;
-import android.os.Build;
+
 import com.android.compatibility.common.util.PropertyUtil;
 
 public class OmapiTest {
@@ -83,10 +83,10 @@ public class OmapiTest {
             {(byte) 0x80, 0x08, 0x00, 0x00, 0x00},
             {(byte) 0xA0, 0x08, 0x00, 0x00, 0x00},
             {(byte) 0x94, 0x08, 0x00, 0x00, 0x00},
-            {0x00, (byte) 0x0C, 0x00, 0x00, 0x01, (byte) 0xAA, 0x00},
-            {(byte) 0x80, (byte) 0x0C, 0x00, 0x00, 0x01, (byte) 0xAA, 0x00},
-            {(byte) 0xA0, (byte) 0x0C, 0x00, 0x00, 0x01, (byte) 0xAA, 0x00},
-            {(byte) 0x94, (byte) 0x0C, 0x00, 0x00, 0x01, (byte) 0xAA, 0x00}
+            {0x00, (byte) 0xC0, 0x00, 0x00, 0x01, (byte) 0xAA, 0x00},
+            {(byte) 0x80, (byte) 0xC0, 0x00, 0x00, 0x01, (byte) 0xAA, 0x00},
+            {(byte) 0xA0, (byte) 0xC0, 0x00, 0x00, 0x01, (byte) 0xAA, 0x00},
+            {(byte) 0x94, (byte) 0xC0, 0x00, 0x00, 0x01, (byte) 0xAA, 0x00}
     };
 
     private final static byte[] CHECK_SELECT_P2_APDU = new byte[]{0x00, (byte) 0xF4, 0x00, 0x00};
@@ -159,7 +159,6 @@ public class OmapiTest {
 
     @Before
     public void setUp() throws Exception {
-        assumeTrue(PropertyUtil.getFirstApiLevel() > Build.VERSION_CODES.O_MR1);
         assumeTrue(supportsHardware());
         seService = new SEService(InstrumentationRegistry.getContext(), new SynchronousExecutor(), mListener);
         connectionTimer = new Timer();

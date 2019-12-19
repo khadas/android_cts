@@ -194,13 +194,6 @@ public class CameraTest extends ActivityInstrumentationTestCase2<CameraCtsActivi
      * Terminates the message looper thread.
      */
     private void terminateMessageLooper() throws Exception {
-        terminateMessageLooper(false);
-    }
-
-    /*
-     * Terminates the message looper thread, optionally allowing evict error
-     */
-    private void terminateMessageLooper(boolean allowEvict) throws Exception {
         mLooper.quit();
         // Looper.quit() is asynchronous. The looper may still has some
         // preview callbacks in the queue after quit is called. The preview
@@ -210,13 +203,7 @@ public class CameraTest extends ActivityInstrumentationTestCase2<CameraCtsActivi
         mLooper.getThread().join();
         mCamera.release();
         mCamera = null;
-        if (allowEvict) {
-            assertTrue("Got unexpected camera error callback.",
-                    (NO_ERROR == mCameraErrorCode ||
-                    Camera.CAMERA_ERROR_EVICTED == mCameraErrorCode));
-        } else {
-            assertEquals("Got camera error callback.", NO_ERROR, mCameraErrorCode);
-        }
+        assertEquals("Got camera error callback.", NO_ERROR, mCameraErrorCode);
     }
 
     // Align 'x' to 'to', which should be a power of 2
@@ -1219,14 +1206,14 @@ public class CameraTest extends ActivityInstrumentationTestCase2<CameraCtsActivi
         Camera.Parameters parameters = mCamera.getParameters();
         SurfaceHolder surfaceHolder;
         surfaceHolder = getActivity().getSurfaceView().getHolder();
-        CamcorderProfile profile = null; // Used for built-in camera
+        CamcorderProfile profile = CamcorderProfile.get(cameraId,
+                CamcorderProfile.QUALITY_LOW);
         Camera.Size videoSize = null; // Used for external camera
 
         // Set the preview size.
         if (mIsExternalCamera) {
             videoSize = setupExternalCameraRecord(parameters);
         } else {
-            profile = CamcorderProfile.get(cameraId, CamcorderProfile.QUALITY_LOW);
             setPreviewSizeByProfile(parameters, profile);
         }
 
@@ -2514,7 +2501,7 @@ public class CameraTest extends ActivityInstrumentationTestCase2<CameraCtsActivi
         mCamera.stopPreview();
 
         firstLooper.quit();
-        terminateMessageLooper(true/*allowEvict*/);
+        terminateMessageLooper();
     }
 
     // This callback just signals on the condition variable, making it useful for checking that
@@ -2729,13 +2716,13 @@ public class CameraTest extends ActivityInstrumentationTestCase2<CameraCtsActivi
         Parameters parameters = mCamera.getParameters();
 
         SurfaceHolder holder = getActivity().getSurfaceView().getHolder();
-        CamcorderProfile profile = null; // for built-in camera
+        CamcorderProfile profile = CamcorderProfile.get(cameraId,
+                CamcorderProfile.QUALITY_LOW);
         Camera.Size videoSize = null; // for external camera
 
         if (mIsExternalCamera) {
             videoSize = setupExternalCameraRecord(parameters);
         } else {
-            profile = CamcorderProfile.get(cameraId, CamcorderProfile.QUALITY_LOW);
             setPreviewSizeByProfile(parameters, profile);
         }
 

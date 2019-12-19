@@ -579,17 +579,13 @@
             <meta-data
                 android:name="test_required_features"
                 android:value="android.hardware.bluetooth_le" />
-            <meta-data
-                android:name="test_excluded_features"
-                android:value="android.hardware.type.watch"  />
         </activity>
 
         <!--
            CTS Verifier BLE Insecure Client Encrypted Test Screen
                test category : bt_le
                test parent : BleInsecureClientTestListActivity
-	-->
-        <!-- TODO(b/78538657)
+        -->
         <activity
             android:name=".bluetooth.BleInsecureEncryptedClientTestActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
@@ -610,8 +606,7 @@
             <meta-data
                 android:name="test_required_features"
                 android:value="android.hardware.bluetooth_le" />
-	</activity>
-        -->
+        </activity>
 
         <!--
               =================================================================================
@@ -694,9 +689,6 @@
             <meta-data
                 android:name="test_required_features"
                 android:value="android.hardware.bluetooth_le" />
-            <meta-data
-                android:name="test_excluded_features"
-                android:value="android.hardware.type.watch"  />
         </activity>
 
         <!--
@@ -704,7 +696,6 @@
                test category : bt_le
                test parent : BleInsecureServerTestListActivity
         -->
-        <!-- TODO(b/78538657)
         <activity
             android:name=".bluetooth.BleInsecureEncryptedServerTestActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
@@ -726,7 +717,6 @@
                 android:name="test_required_features"
                 android:value="android.hardware.bluetooth_le" />
         </activity>
-        -->
 
         <!--
              =================================================================================
@@ -810,9 +800,6 @@
             <meta-data
                 android:name="test_required_features"
                 android:value="android.hardware.bluetooth_le" />
-            <meta-data
-                android:name="test_excluded_features"
-                android:value="android.hardware.type.watch"  />
         </activity>
 
         <!--
@@ -923,9 +910,6 @@
             <meta-data
                 android:name="test_required_features"
                 android:value="android.hardware.bluetooth_le" />
-            <meta-data
-                android:name="test_excluded_features"
-                android:value="android.hardware.type.watch"  />
         </activity>
 
         <!--
@@ -1219,8 +1203,8 @@
                 <category android:name="android.cts.intent.category.MANUAL_TEST"/>
             </intent-filter>
             <meta-data android:name="test_category" android:value="@string/test_category_hardware"/>
-            <meta-data android:name="test_required_features"
-                       android:value="android.hardware.location.gps:android.hardware.wifi:android.hardware.telephony"/>
+            <meta-data android:name="test_required_features" android:value="android.hardware.location.gps" />
+            <meta-data android:name="test_required_features" android:value="android.hardware.wifi" />
         </activity>
 
         <activity android:name=".location.EmergencyCallMessageTestsActivity"
@@ -1231,8 +1215,9 @@
                 <category android:name="android.cts.intent.category.MANUAL_TEST"/>
             </intent-filter>
             <meta-data android:name="test_category" android:value="@string/test_category_hardware"/>
-            <meta-data android:name="test_required_features"
-                       android:value="android.hardware.location.gps:android.hardware.wifi:android.hardware.telephony"/>
+            <meta-data android:name="test_required_features" android:value="android.hardware.location.gps" />
+            <meta-data android:name="test_required_features" android:value="android.hardware.wifi" />
+            <meta-data android:name="test_required_features" android:value="android.hardware.telephony"/>
         </activity>
 
         <activity android:name=".location.EmergencyCallGNSSTestsActivity"
@@ -1243,8 +1228,8 @@
                 <category android:name="android.cts.intent.category.MANUAL_TEST"/>
             </intent-filter>
             <meta-data android:name="test_category" android:value="@string/test_category_hardware"/>
-            <meta-data android:name="test_required_features"
-                       android:value="android.hardware.location.gps:android.hardware.wifi:android.hardware.telephony"/>
+            <meta-data android:name="test_required_features" android:value="android.hardware.location.gps" />
+            <meta-data android:name="test_required_features" android:value="android.hardware.wifi" />
         </activity>
 
         <activity android:name=".location.GnssMeasurementWhenNoLocationTestsActivity"
@@ -1306,8 +1291,7 @@
                 <category android:name="android.cts.intent.category.MANUAL_TEST" />
             </intent-filter>
             <meta-data android:name="test_category" android:value="@string/test_category_networking" />
-            <meta-data android:name="test_required_features"
-                       android:value="android.hardware.wifi:android.hardware.telephony" />
+            <meta-data android:name="test_required_features" android:value="android.hardware.wifi" />
             <meta-data android:name="test_excluded_features"
                        android:value="android.hardware.type.television:android.software.leanback:android.hardware.type.watch" />
         </activity>
@@ -1920,10 +1904,6 @@
 
         <activity android:name=".managedprovisioning.RecentsRedactionActivity"
                 android:label="@string/provisioning_byod_recents" >
-        </activity>
-        <activity android:name=".managedprovisioning.IntermediateRecentActivity"
-                  android:label="@string/provisioning_byod_recents"
-                  android:theme="@android:style/Theme.NoDisplay">
             <intent-filter>
                 <action android:name="com.android.cts.verifier.managedprovisioning.RECENTS" />
                 <category android:name="android.intent.category.DEFAULT"></category>
@@ -2006,7 +1986,7 @@
             </intent-filter>
             <meta-data android:name="test_category" android:value="@string/test_category_notifications" />
             <meta-data android:name="test_excluded_features"
-                android:value="android.hardware.type.watch:android.software.leanback:android.hardware.type.automotive" />
+                android:value="android.hardware.type.watch:android.software.leanback" />
         </activity>
 
         <activity android:name=".vr.VrListenerVerifierActivity"
@@ -2229,7 +2209,7 @@
             </intent-filter>
             <meta-data android:name="test_category" android:value="@string/test_category_deskclock" />
             <meta-data android:name="test_excluded_features"
-                    android:value="android.hardware.type.television:android.software.leanback:android.hardware.type.automotive" />
+                    android:value="android.hardware.type.television:android.software.leanback" />
         </activity>
 
 <!-- TODO: enable when not requiring to tap the screen and timeouts are tuned -->
@@ -2636,15 +2616,11 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="com.android.cts.verifier.managedprovisioning.BYOD_STATUS" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-            <intent-filter>
-            <action android:name="com.android.cts.verifier.managedprovisioning.BYOD_TEST_RESULT" />
-                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.DEFAULT"></category>
             </intent-filter>
             <intent-filter>
                 <action android:name="com.android.cts.verifier.managedprovisioning.action.BYOD_DISK_ENCRYPTION_STATUS" />
-                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.DEFAULT"></category>
             </intent-filter>
             <meta-data android:name="test_category" android:value="@string/test_category_managed_provisioning" />
             <meta-data android:name="test_required_features" android:value="android.software.managed_users:android.software.device_admin" />
@@ -2864,7 +2840,7 @@
             </intent-filter>
             <meta-data android:name="test_category" android:value="@string/test_category_jobscheduler" />
             <meta-data android:name="test_excluded_features"
-                    android:value="android.hardware.type.television:android.software.leanback:android.hardware.type.automotive" />
+                    android:value="android.hardware.type.television:android.software.leanback" />
         </activity>
 
         <activity android:name=".jobscheduler.ConnectivityConstraintTestActivity" android:label="@string/js_connectivity_test">
@@ -3008,7 +2984,6 @@
             </intent-filter>
             <meta-data android:name="test_category" android:value="@string/test_category_audio" />
             <meta-data android:name="test_required_features" android:value="android.hardware.audio.output" />
-            <meta-data android:name="test_excluded_features" android:value="android.software.leanback" />
         </activity>
 
         <activity android:name=".audio.AudioInputDeviceNotificationsActivity"
@@ -3019,7 +2994,6 @@
             </intent-filter>
             <meta-data android:name="test_category" android:value="@string/test_category_audio" />
             <meta-data android:name="test_required_features" android:value="android.hardware.microphone" />
-            <meta-data android:name="test_excluded_features" android:value="android.software.leanback" />
         </activity>
 
         <activity android:name=".audio.AudioOutputRoutingNotificationsActivity"
@@ -3030,8 +3004,7 @@
             </intent-filter>
             <meta-data android:name="test_category" android:value="@string/test_category_audio" />
             <meta-data android:name="test_required_features" android:value="android.hardware.audio.output" />
-            <meta-data android:name="test_excluded_features" android:value="android.software.leanback" />
-        </activity>
+            </activity>
 
         <activity android:name=".audio.AudioInputRoutingNotificationsActivity"
                   android:label="@string/audio_input_routingnotifications_test">
@@ -3041,8 +3014,7 @@
             </intent-filter>
             <meta-data android:name="test_category" android:value="@string/test_category_audio" />
             <meta-data android:name="test_required_features" android:value="android.hardware.microphone" />
-            <meta-data android:name="test_excluded_features" android:value="android.software.leanback" />
-        </activity>
+            </activity>
 
         <activity android:name=".audio.USBAudioPeripheralAttributesActivity"
                   android:label="@string/audio_uap_attribs_test">
@@ -3099,7 +3071,8 @@
                 <category android:name="android.cts.intent.category.MANUAL_TEST" />
             </intent-filter>
             <meta-data android:name="test_category" android:value="@string/test_category_audio" />
-            <meta-data android:name="test_required_features" android:value="android.hardware.microphone:android.hardware.audio.output" />
+            <meta-data android:name="test_required_features" android:value="android.hardware.microphone" />
+            <meta-data android:name="test_required_features" android:value="android.hardware.audio.output" />
             <meta-data android:name="test_excluded_features"
                        android:value="android.hardware.type.watch:android.hardware.type.television" />
         </activity>
@@ -3111,7 +3084,8 @@
                 <category android:name="android.cts.intent.category.MANUAL_TEST" />
             </intent-filter>
             <meta-data android:name="test_category" android:value="@string/test_category_audio" />
-            <meta-data android:name="test_required_features" android:value="android.hardware.microphone:android.hardware.audio.output" />
+            <meta-data android:name="test_required_features" android:value="android.hardware.microphone" />
+            <meta-data android:name="test_required_features" android:value="android.hardware.audio.output" />
         </activity>
 
         <activity android:name=".audio.AudioFrequencySpeakerActivity"
@@ -3121,7 +3095,8 @@
                 <category android:name="android.cts.intent.category.MANUAL_TEST" />
             </intent-filter>
             <meta-data android:name="test_category" android:value="@string/test_category_audio" />
-            <meta-data android:name="test_required_features" android:value="android.hardware.audio.output:android.hardware.usb.host" />
+            <meta-data android:name="test_required_features" android:value="android.hardware.audio.output" />
+            <meta-data android:name="test_required_features" android:value="android.hardware.usb.host" />
         </activity>
 
         <activity android:name=".audio.AudioFrequencyMicActivity"
@@ -3131,7 +3106,9 @@
                 <category android:name="android.cts.intent.category.MANUAL_TEST" />
             </intent-filter>
             <meta-data android:name="test_category" android:value="@string/test_category_audio" />
-            <meta-data android:name="test_required_features" android:value="android.hardware.microphone:android.hardware.audio.output:android.hardware.usb.host" />
+            <meta-data android:name="test_required_features" android:value="android.hardware.microphone" />
+            <meta-data android:name="test_required_features" android:value="android.hardware.audio.output" />
+            <meta-data android:name="test_required_features" android:value="android.hardware.usb.host" />
         </activity>
 
         <activity android:name=".audio.AudioFrequencyUnprocessedActivity"
@@ -3241,9 +3218,6 @@
             <meta-data
                 android:name="test_required_features"
                 android:value="android.hardware.telephony"/>
-            <meta-data
-                android:name="test_required_configs"
-                android:value="config_voice_capable"/>
         </activity>
 
         <receiver android:name=".voicemail.VoicemailBroadcastReceiver">
@@ -3266,9 +3240,6 @@
             <meta-data
                 android:name="test_required_features"
                 android:value="android.hardware.telephony"/>
-            <meta-data
-                android:name="test_required_configs"
-                android:value="config_voice_capable"/>
         </activity>
 
         <activity
@@ -3285,9 +3256,6 @@
             <meta-data
                 android:name="test_required_features"
                 android:value="android.hardware.telephony"/>
-            <meta-data
-                android:name="test_required_configs"
-                android:value="config_voice_capable"/>
         </activity>
 
         <service android:name=".dialer.DialerCallTestService"
@@ -3312,9 +3280,6 @@
             <meta-data
                 android:name="test_required_features"
                 android:value="android.hardware.telephony"/>
-            <meta-data
-                android:name="test_required_configs"
-                android:value="config_voice_capable"/>
         </activity>
 
         <activity
@@ -3331,9 +3296,6 @@
             <meta-data
                 android:name="test_required_features"
                 android:value="android.hardware.telephony"/>
-            <meta-data
-                android:name="test_required_configs"
-                android:value="config_voice_capable"/>
         </activity>
 
         <activity
@@ -3350,9 +3312,6 @@
             <meta-data
                 android:name="test_required_features"
                 android:value="android.hardware.telephony"/>
-            <meta-data
-                android:name="test_required_configs"
-                android:value="config_voice_capable"/>
         </activity>
 
         <activity
@@ -3369,9 +3328,6 @@
             <meta-data
                 android:name="test_required_features"
                 android:value="android.hardware.telephony"/>
-            <meta-data
-                android:name="test_required_configs"
-                android:value="config_voice_capable"/>
         </activity>
 
         <service
@@ -3416,9 +3372,6 @@
             <meta-data
                 android:name="test_required_features"
                 android:value="android.hardware.telephony"/>
-            <meta-data
-                android:name="test_required_configs"
-                android:value="config_voice_capable"/>
         </activity>
 
         <activity
@@ -3435,9 +3388,6 @@
             <meta-data
                 android:name="test_required_features"
                 android:value="android.hardware.telephony"/>
-            <meta-data
-                android:name="test_required_configs"
-                android:value="config_voice_capable"/>
             </activity>
 
         <activity
@@ -3454,9 +3404,6 @@
             <meta-data
                 android:name="test_required_features"
                 android:value="android.hardware.telephony"/>
-            <meta-data
-                android:name="test_required_configs"
-                android:value="config_voice_capable"/>
         </activity>
 
         <activity
@@ -3473,9 +3420,6 @@
             <meta-data
                 android:name="test_required_features"
                 android:value="android.hardware.telephony"/>
-            <meta-data
-                android:name="test_required_configs"
-                android:value="config_voice_capable"/>
         </activity>
 
         <service android:name="com.android.cts.verifier.telecom.CtsConnectionService"

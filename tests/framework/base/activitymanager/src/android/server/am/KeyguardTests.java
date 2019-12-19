@@ -65,6 +65,9 @@ public class KeyguardTests extends KeyguardTestBase {
     // Shell command to dismiss keyguard via {@link #BROADCAST_RECEIVER_ACTIVITY} method.
     private static final String DISMISS_KEYGUARD_METHOD_BROADCAST = "am broadcast -a "
             + ACTION_TRIGGER_BROADCAST + " --ez " + EXTRA_DISMISS_KEYGUARD_METHOD + " true";
+    // Shell command to finish {@link #BROADCAST_RECEIVER_ACTIVITY}.
+    private static final String FINISH_ACTIVITY_BROADCAST = "am broadcast -a "
+            + ACTION_TRIGGER_BROADCAST + " --ez " + EXTRA_FINISH_BROADCAST + " true";
 
     @Before
     @Override
@@ -327,7 +330,6 @@ public class KeyguardTests extends KeyguardTestBase {
             pressBackButton();
             mAmWmState.waitForKeyguardShowingAndNotOccluded();
             mAmWmState.waitForDisplayUnfrozen();
-            mAmWmState.waitForAppTransitionIdle();
             mAmWmState.assertSanity();
             mAmWmState.assertHomeActivityVisible(false);
             mAmWmState.assertKeyguardShowingAndNotOccluded();

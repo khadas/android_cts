@@ -107,15 +107,10 @@ public class VpxEncoderTest extends VpxCodecTestBase {
 
             VpxEncodingStatistics statistics = computeEncodingStatistics(bufInfo);
 
-            /* Allow achieved bitrate to be smaller than target bitrate for
-             * VIDEO_ControlRateVariable mode */
-            if ((params.bitrateType == VIDEO_ControlRateConstant) ||
-                (statistics.mAverageBitrate > targetBitrate)) {
-                assertEquals("Stream bitrate " + statistics.mAverageBitrate +
+            assertEquals("Stream bitrate " + statistics.mAverageBitrate +
                     " is different from the target " + targetBitrate,
                     targetBitrate, statistics.mAverageBitrate,
                     MAX_BITRATE_VARIATION * targetBitrate);
-            }
 
             decode(params.outputIvfFilename, null, codecMimeType, FPS, params.forceGoogleEncoder);
         }

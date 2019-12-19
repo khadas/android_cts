@@ -29,14 +29,10 @@ public class AssistantVoiceInteractionService extends VoiceInteractionService {
 
     private boolean mReady;
 
-    private boolean mStarted;
-    private Bundle mExtras;
-
     @Override
     public void onReady() {
         super.onReady();
         mReady = true;
-        showSessionIfReady();
     }
 
     @Override
@@ -47,17 +43,12 @@ public class AssistantVoiceInteractionService extends VoiceInteractionService {
             stopSelf();
             return START_NOT_STICKY;
         }
-        mExtras = intent.getExtras() != null ? intent.getExtras() : new Bundle();
-        mStarted = true;
-        showSessionIfReady();
+        if (mReady) {
+            Bundle extras = intent.getExtras() != null ? intent.getExtras() : new Bundle();
+            showSession(extras, 0);
+        }
         return START_NOT_STICKY;
     }
-
-    private void showSessionIfReady() {
-        if (mReady && mStarted) {
-            showSession(mExtras, 0);
-        }
-    };
 
     /**
      * Starts the assistant voice interaction service, which initiates a new session that starts

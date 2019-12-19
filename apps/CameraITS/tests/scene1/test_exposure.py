@@ -31,17 +31,15 @@ THRESHOLD_MAX_LEVEL = 0.9
 THRESHOLD_MAX_LEVEL_DIFF = 0.045
 THRESHOLD_MAX_LEVEL_DIFF_WIDE_RANGE = 0.06
 THRESH_ROUND_DOWN_GAIN = 0.1
-THRESH_ROUND_DOWN_EXP = 0.03
-THRESH_ROUND_DOWN_EXP0 = 1.00  # tol at 0ms exp; theoretical limit @ 4-line exp
-THRESH_EXP_KNEE = 6E6  # exposures less than knee have relaxed tol
+THRESH_ROUND_DOWN_EXP = 0.05
 
 
 def get_raw_active_array_size(props):
     """Return the active array w, h from props."""
-    aaw = (props['android.sensor.info.preCorrectionActiveArraySize']['right'] -
-           props['android.sensor.info.preCorrectionActiveArraySize']['left'])
-    aah = (props['android.sensor.info.preCorrectionActiveArraySize']['bottom'] -
-           props['android.sensor.info.preCorrectionActiveArraySize']['top'])
+    aaw = (props['android.sensor.info.activeArraySize']['right'] -
+           props['android.sensor.info.activeArraySize']['left'])
+    aah = (props['android.sensor.info.activeArraySize']['bottom'] -
+           props['android.sensor.info.activeArraySize']['top'])
     return aaw, aah
 
 
@@ -67,7 +65,9 @@ def main():
         its.caps.skip_unless(its.caps.compute_target_exposure(props) and
                              its.caps.per_frame_control(props))
 
-        process_raw = (its.caps.raw16(props) and
+        process_raw = (its.caps.compute_target_exposure(props) and
+                       its.caps.per_frame_control(props) and
+                       its.caps.raw16(props) and
                        its.caps.manual_sensor(props))
 
         debug = its.caps.debug_mode()
@@ -94,23 +94,15 @@ def main():
             cap = cam.do_capture(req, fmt)
             s_res = cap['metadata']['android.sensor.sensitivity']
             e_res = cap['metadata']['android.sensor.exposureTime']
-            # determine exposure tolerance based on exposure time
-            if e_test >= THRESH_EXP_KNEE:
-                thresh_round_down_exp = THRESH_ROUND_DOWN_EXP
-            else:
-                thresh_round_down_exp = (
-                        THRESH_ROUND_DOWN_EXP +
-                        (THRESH_ROUND_DOWN_EXP0 - THRESH_ROUND_DOWN_EXP) *
-                        (THRESH_EXP_KNEE - e_test) / THRESH_EXP_KNEE)
             s_msg = 's_write: %d, s_read: %d, TOL=%.f%%' % (
                     s_test, s_res, THRESH_ROUND_DOWN_GAIN*100)
             e_msg = 'e_write: %.2fms, e_read: %.2fms, TOL=%.f%%' % (
-                    e_test/1.0E6, e_res/1.0E6, thresh_round_down_exp*100)
+                    e_test/1.0E6, e_res/1.0E6, THRESH_ROUND_DOWN_EXP*100)
             assert 0 <= s_test - s_res < s_test * THRESH_ROUND_DOWN_GAIN, s_msg
-            assert 0 <= e_test - e_res < e_test * thresh_round_down_exp, e_msg
+            assert 0 <= e_test - e_res < e_test * THRESH_ROUND_DOWN_EXP, e_msg
             s_e_product_res = s_res * e_res
             request_result_ratio = s_e_product / s_e_product_res
-            print 'Capture result s:', s_res, 'e:', e_res
+            print 'Capture result s:', s_test, 'e:', e_test
             img = its.image.convert_capture_to_rgb_image(cap)
             its.image.write_image(img, '%s_mult=%3.2f.jpg' % (NAME, m))
             tile = its.image.get_image_patch(img, 0.45, 0.45, 0.1, 0.1)

@@ -2,7 +2,6 @@ package com.android.cts.verifier.managedprovisioning;
 
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 
 public class ByodFlowTestHelper {
@@ -16,23 +15,6 @@ public class ByodFlowTestHelper {
 
     public void setup() {
         setComponentsEnabledState(PackageManager.COMPONENT_ENABLED_STATE_DISABLED);
-    }
-
-    /** Reports result to ByodFlowTestActivity if it is impossible via normal setResult. */
-    public void sendResultToPrimary(Intent result) {
-        final Intent intent = new Intent(ByodFlowTestActivity.ACTION_TEST_RESULT);
-        intent.putExtra(ByodFlowTestActivity.EXTRA_RESULT, result);
-        startActivityInPrimary(intent);
-    }
-
-    public void startActivityInPrimary(Intent intent) {
-        // Disable app components in the current profile, so only the counterpart in the other
-        // profile can respond (via cross-profile intent filter)
-        mContext.getPackageManager().setComponentEnabledSetting(
-                new ComponentName(mContext, ByodFlowTestActivity.class),
-                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                PackageManager.DONT_KILL_APP);
-        mContext.startActivity(intent);
     }
 
     /**
@@ -58,7 +40,7 @@ public class ByodFlowTestHelper {
                 AuthenticationBoundKeyTestActivity.class.getName(),
                 VpnTestActivity.class.getName(),
                 AlwaysOnVpnSettingsTestActivity.class.getName(),
-                IntermediateRecentActivity.class.getName(),
+                RecentsRedactionActivity.class.getName(),
                 CommandReceiverActivity.class.getName(),
                 SetSupportMessageActivity.class.getName(),
                 KeyChainTestActivity.class.getName(),

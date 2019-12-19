@@ -18,16 +18,13 @@ package android.autofillservice.cts;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.view.View;
-
 import androidx.annotation.Nullable;
+import android.view.View;
 
 /**
  * Empty activity
  */
 public class EmptyActivity extends Activity {
-
-    public static final String ID_EMPTY = "empty";
 
     private View mEmptyView;
 

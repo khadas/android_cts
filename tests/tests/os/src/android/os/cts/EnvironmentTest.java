@@ -81,17 +81,14 @@ public class EnvironmentTest extends TestCase {
         // inodes can result in wasted space.
         final long maxsize = stat.f_blocks * stat.f_frsize;
         final long maxInodes = maxsize / 4096;
-        // Assuming the smallest storage would be 4GB, min # of free inodes
-        // in EXT4/F2FS must be larger than 128k for Android to work properly.
-        final long minInodes = 128 * 1024;
+        final long minsize = stat.f_bavail * stat.f_frsize;
+        final long minInodes = minsize / 32768;
 
-        if (stat.f_ffree >= minInodes && stat.f_ffree <= maxInodes
-            && stat.f_favail <= stat.f_ffree) {
+        if (stat.f_ffree >= minInodes && stat.f_ffree <= maxInodes) {
             // Sweet, sounds great!
         } else {
-            fail("Number of inodes " + stat.f_ffree + "/" + stat.f_favail
-              + " not within sane range for partition of " + maxsize + " bytes; expected ["
-              + minInodes + "," + maxInodes + "]");
+            fail("Number of inodes " + stat.f_ffree + " not within sane range for partition of "
+                    + minsize + "," + maxsize + " bytes; expected [" + minInodes + "," + maxInodes + "]");
         }
     }
 }

@@ -39,7 +39,6 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 
 import com.android.compatibility.common.util.PollingCheck;
-import com.android.compatibility.common.util.WidgetTestUtils;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -81,12 +80,13 @@ public class MotionEventTest {
      * screen to determine approximate locations of touch events without the user knowing.
      */
     @Test
-    public void testActionOutsideDoesNotContainedObscuredInformation() throws Throwable {
+    public void testActionOutsideDoesNotContainedObscuredInformation() throws Exception {
         enableAppOps();
         final OnTouchListener listener = new OnTouchListener();
-        FutureTask<View> addViewTask = new FutureTask<>(() -> {
+        final Point size = new Point();
+        final View[] viewHolder = new View[1];
+        mActivity.runOnUiThread(() -> {
             final WindowManager wm = mActivity.getSystemService(WindowManager.class);
-            final Point size = new Point();
             wm.getDefaultDisplay().getSize(size);
 
             WindowManager.LayoutParams wmlp = new WindowManager.LayoutParams(
@@ -115,26 +115,19 @@ public class MotionEventTest {
             v.setBackgroundColor(Color.BLUE);
             v.setOnTouchListener(listener);
             v.setLayoutParams(vglp);
+            viewHolder[0] = v;
 
             wm.addView(v, wmlp);
-            return v;
         });
-        mActivity.runOnUiThread(addViewTask);
-        View view = addViewTask.get(5, TimeUnit.SECONDS);
+        mInstrumentation.waitForIdleSync();
 
-        // Wait for a layout pass to be certain the view is on the screen
-        // before getting the location and injecting touches.
-        WidgetTestUtils.runOnMainAndLayoutSync(mActivityRule, view, null /*runnable*/,
-                true /*forceLayout*/);
-
-        FutureTask<Point> clickLocationTask = new FutureTask<>(() -> {
+        FutureTask<Point> task = new FutureTask<>(() -> {
             final int[] viewLocation = new int[2];
-            view.getLocationOnScreen(viewLocation);
-            // Set y position to the center of the view, to make sure it is away from the status bar
-            return new Point(viewLocation[0], viewLocation[1] + view.getHeight() / 2);
+            viewHolder[0].getLocationOnScreen(viewLocation);
+            return new Point(viewLocation[0], viewLocation[1]);
         });
-        mActivity.runOnUiThread(clickLocationTask);
-        Point viewLocation = clickLocationTask.get(5, TimeUnit.SECONDS);
+        mActivity.runOnUiThread(task);
+        Point viewLocation = task.get(5, TimeUnit.SECONDS);
         injectTap(viewLocation.x, viewLocation.y);
 
         List<MotionEvent> outsideEvents = listener.getOutsideEvents();

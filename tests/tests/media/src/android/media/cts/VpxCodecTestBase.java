@@ -64,8 +64,9 @@ public class VpxCodecTestBase extends AndroidTestCase {
     protected static final long DEFAULT_DEQUEUE_TIMEOUT_US = 200000;
     // Default timeout for MediaEncoderAsync - 30 sec.
     protected static final long DEFAULT_ENCODE_TIMEOUT_MS = 30000;
-    // Default sync frame interval in frames
-    private static final int SYNC_FRAME_INTERVAL = 30;
+    // Default sync frame interval in frames (zero means allow the encoder to auto-select
+    // key frame interval).
+    private static final int SYNC_FRAME_INTERVAL = 0;
     // Video bitrate type - should be set to OMX_Video_ControlRateConstant from OMX_Video.h
     protected static final int VIDEO_ControlRateVariable = 1;
     protected static final int VIDEO_ControlRateConstant = 2;
@@ -367,27 +368,24 @@ public class VpxCodecTestBase extends AndroidTestCase {
 
     /**
      * Packs YUV420 frame by moving it to a smaller size buffer with stride and slice
-     * height equal to the crop window.
+     * height equal to the original frame width and height.
      */
-    private static byte[] PackYUV420(int left, int top, int width, int height,
+    private static byte[] PackYUV420(int width, int height,
             int stride, int sliceHeight, byte[] src) {
         byte[] dst = new byte[width * height * 3 / 2];
         // Y copy.
         for (int i = 0; i < height; i++) {
-            System.arraycopy(src, (i + top) * stride + left, dst, i * width, width);
+            System.arraycopy(src, i * stride, dst, i * width, width);
         }
         // U and V copy.
         int u_src_offset = stride * sliceHeight;
         int v_src_offset = u_src_offset + u_src_offset / 4;
         int u_dst_offset = width * height;
         int v_dst_offset = u_dst_offset + u_dst_offset / 4;
-        // Downsample and align to floor-2 for crop origin.
-        left /= 2;
-        top /= 2;
         for (int i = 0; i < height / 2; i++) {
-            System.arraycopy(src, u_src_offset + (i + top) * (stride / 2) + left,
+            System.arraycopy(src, u_src_offset + i * (stride / 2),
                     dst, u_dst_offset + i * (width / 2), width / 2);
-            System.arraycopy(src, v_src_offset + (i + top) * (stride / 2) + left,
+            System.arraycopy(src, v_src_offset + i * (stride / 2),
                     dst, v_dst_offset + i * (width / 2), width / 2);
         }
         return dst;
@@ -535,10 +533,6 @@ public class VpxCodecTestBase extends AndroidTestCase {
         int frameCount = ivf.getFrameCount();
         int frameStride = frameWidth;
         int frameSliceHeight = frameHeight;
-        int cropLeft = 0;
-        int cropTop = 0;
-        int cropWidth = frameWidth;
-        int cropHeight = frameHeight;
         assertTrue(frameWidth > 0);
         assertTrue(frameHeight > 0);
         assertTrue(frameCount > 0);
@@ -641,28 +635,6 @@ public class VpxCodecTestBase extends AndroidTestCase {
                             " x " + frameSliceHeight);
                     frameStride = Math.max(frameWidth, frameStride);
                     frameSliceHeight = Math.max(frameHeight, frameSliceHeight);
-
-                    // Parse crop window for the area of recording decoded frame data.
-                    if (format.containsKey("crop-left")) {
-                        cropLeft = format.getInteger("crop-left");
-                    }
-                    if (format.containsKey("crop-top")) {
-                        cropTop = format.getInteger("crop-top");
-                    }
-                    if (format.containsKey("crop-right")) {
-                        cropWidth = format.getInteger("crop-right") - cropLeft + 1;
-                    } else {
-                        cropWidth = frameWidth;
-                    }
-                    if (format.containsKey("crop-bottom")) {
-                        cropHeight = format.getInteger("crop-bottom") - cropTop + 1;
-                    } else {
-                        cropHeight = frameHeight;
-                    }
-                    Log.d(TAG, "Frame crop window origin: " + cropLeft + " x " + cropTop
-                            + ", size: " + cropWidth + " x " + cropHeight);
-                    cropWidth = Math.min(frameWidth - cropLeft, cropWidth);
-                    cropHeight = Math.min(frameHeight - cropTop, cropHeight);
                 }
                 result = decoder.dequeueOutputBuffer(bufferInfo, DEFAULT_DEQUEUE_TIMEOUT_US);
             }
@@ -689,11 +661,11 @@ public class VpxCodecTestBase extends AndroidTestCase {
                             frame = NV12ToYUV420(frameWidth, frameHeight,
                                     frameStride, frameSliceHeight, frame);
                         }
-                        int writeLength = Math.min(cropWidth * cropHeight * 3 / 2, frame.length);
+                        int writeLength = Math.min(frameWidth * frameHeight * 3 / 2, frame.length);
                         // Pack frame if necessary.
                         if (writeLength < frame.length &&
-                                (frameStride > cropWidth || frameSliceHeight > cropHeight)) {
-                            frame = PackYUV420(cropLeft, cropTop, cropWidth, cropHeight,
+                                (frameStride > frameWidth || frameSliceHeight > frameHeight)) {
+                            frame = PackYUV420(frameWidth, frameHeight,
                                     frameStride, frameSliceHeight, frame);
                         }
                         yuv.write(frame, 0, writeLength);

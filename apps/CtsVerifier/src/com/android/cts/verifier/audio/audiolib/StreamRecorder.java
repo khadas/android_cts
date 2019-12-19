@@ -120,7 +120,7 @@ public class StreamRecorder {
         mNumChannels = numChans;
         mSampleRate = sampleRate;
 
-        int chanIndexMask = AudioUtils.countToIndexMask(numChans);
+        int chanPosMask = AudioUtils.countToInPositionMask(numChans);
         int bufferSizeInBytes = 2048;   // Some, non-critical value
 
         try {
@@ -128,14 +128,14 @@ public class StreamRecorder {
                     .setAudioFormat(new AudioFormat.Builder()
                             .setEncoding(AudioFormat.ENCODING_PCM_FLOAT)
                             .setSampleRate(mSampleRate)
-                            .setChannelIndexMask(chanIndexMask)
+                            .setChannelMask(chanPosMask)
                             .build())
                     .setBufferSizeInBytes(bufferSizeInBytes)
                     .build();
 
             return true;
         } catch (UnsupportedOperationException ex) {
-            Log.e(TAG, "Couldn't open AudioRecord: " + ex);
+            Log.i(TAG, "Couldn't open AudioRecord: " + ex);
             mAudioRecord = null;
             return false;
         }

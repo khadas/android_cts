@@ -114,7 +114,6 @@ public class ActivityManagerDisplayLockedKeyguardTests extends ActivityManagerDi
             lockScreenSession.enterAndConfirmLockCredential();
             mAmWmState.waitForKeyguardGone();
             mAmWmState.assertKeyguardGone();
-            mAmWmState.computeState(DISMISS_KEYGUARD_ACTIVITY);
             mAmWmState.assertVisibility(DISMISS_KEYGUARD_ACTIVITY, true);
             mAmWmState.assertVisibility(SHOW_WHEN_LOCKED_ACTIVITY, true);
         }

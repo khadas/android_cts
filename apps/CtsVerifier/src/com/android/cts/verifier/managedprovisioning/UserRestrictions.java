@@ -47,6 +47,7 @@ public class UserRestrictions {
         UserManager.DISALLOW_NETWORK_RESET,
         UserManager.DISALLOW_OUTGOING_BEAM,
         UserManager.DISALLOW_REMOVE_MANAGED_PROFILE,
+        UserManager.DISALLOW_REMOVE_USER,
         UserManager.DISALLOW_SHARE_LOCATION,
         UserManager.DISALLOW_UNINSTALL_APPS,
         UserManager.DISALLOW_UNIFIED_PASSWORD,
@@ -55,6 +56,7 @@ public class UserRestrictions {
         UserManager.DISALLOW_AIRPLANE_MODE,
         UserManager.DISALLOW_CONFIG_SCREEN_TIMEOUT,
         UserManager.DISALLOW_CONFIG_BRIGHTNESS,
+        UserManager.DISALLOW_AMBIENT_DISPLAY,
     };
 
     private static final ArrayMap<String, UserRestrictionItem> USER_RESTRICTION_ITEMS;
@@ -76,6 +78,7 @@ public class UserRestrictions {
             R.string.disallow_network_reset,
             R.string.disallow_outgoing_beam,
             R.string.disallow_remove_managed_profile,
+            R.string.disallow_remove_user,
             R.string.disallow_share_location,
             R.string.disallow_uninstall_apps,
             R.string.disallow_unified_challenge,
@@ -83,7 +86,8 @@ public class UserRestrictions {
             R.string.disallow_config_location,
             R.string.disallow_airplane_mode,
             R.string.disallow_config_screen_timeout,
-            R.string.disallow_config_brightness
+            R.string.disallow_config_brightness,
+            R.string.disallow_ambient_display
         };
 
         final int[] restrictionActions = new int[] {
@@ -103,6 +107,7 @@ public class UserRestrictions {
             R.string.disallow_network_reset_action,
             R.string.disallow_outgoing_beam_action,
             R.string.disallow_remove_managed_profile_action,
+            R.string.disallow_remove_user_action,
             R.string.disallow_share_location_action,
             R.string.disallow_uninstall_apps_action,
             R.string.disallow_unified_challenge_action,
@@ -110,7 +115,8 @@ public class UserRestrictions {
             R.string.disallow_config_location_action,
             R.string.disallow_airplane_mode_action,
             R.string.disallow_config_screen_timeout_action,
-            R.string.disallow_config_brightness_action
+            R.string.disallow_config_brightness_action,
+            R.string.disallow_ambient_display_action
         };
 
         final String[] settingsIntentActions = new String[] {
@@ -130,12 +136,14 @@ public class UserRestrictions {
             Settings.ACTION_SETTINGS,
             Settings.ACTION_NFC_SETTINGS,
             Settings.ACTION_SETTINGS,
+            Settings.ACTION_SETTINGS,
             Settings.ACTION_LOCATION_SOURCE_SETTINGS,
             Settings.ACTION_APPLICATION_SETTINGS,
             Settings.ACTION_SECURITY_SETTINGS,
             Settings.ACTION_DATE_SETTINGS,
             Settings.ACTION_LOCATION_SOURCE_SETTINGS,
             Settings.ACTION_AIRPLANE_MODE_SETTINGS,
+            Settings.ACTION_DISPLAY_SETTINGS,
             Settings.ACTION_DISPLAY_SETTINGS,
             Settings.ACTION_DISPLAY_SETTINGS,
         };
@@ -171,12 +179,14 @@ public class UserRestrictions {
                     UserManager.DISALLOW_INSTALL_UNKNOWN_SOURCES,
                     UserManager.DISALLOW_MODIFY_ACCOUNTS,
                     UserManager.DISALLOW_OUTGOING_BEAM,
+                    UserManager.DISALLOW_REMOVE_USER,
                     UserManager.DISALLOW_SHARE_LOCATION,
                     UserManager.DISALLOW_UNINSTALL_APPS,
                     UserManager.DISALLOW_CONFIG_DATE_TIME,
                     UserManager.DISALLOW_CONFIG_LOCATION,
                     UserManager.DISALLOW_CONFIG_SCREEN_TIMEOUT,
-                    UserManager.DISALLOW_CONFIG_BRIGHTNESS);
+                    UserManager.DISALLOW_CONFIG_BRIGHTNESS,
+                    UserManager.DISALLOW_AMBIENT_DISPLAY);
 
     public static String getRestrictionLabel(Context context, String restriction) {
         final UserRestrictionItem item = findRestrictionItem(restriction);
@@ -232,6 +242,7 @@ public class UserRestrictions {
         final PackageManager pm = context.getPackageManager();
         switch (restriction) {
             case UserManager.DISALLOW_ADD_USER:
+            case UserManager.DISALLOW_REMOVE_USER:
                 return UserManager.supportsMultipleUsers();
             case UserManager.DISALLOW_ADJUST_VOLUME:
                 return pm.hasSystemFeature(PackageManager.FEATURE_AUDIO_OUTPUT);

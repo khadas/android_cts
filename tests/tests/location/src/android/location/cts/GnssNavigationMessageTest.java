@@ -42,7 +42,6 @@ public class GnssNavigationMessageTest extends GnssTestCase {
     private static final String TAG = "GpsNavMsgTest";
     private static final int EVENTS_COUNT = 5;
     private TestGnssNavigationMessageListener mTestGnssNavigationMessageListener;
-    private TestLocationListener mLocationListener;
 
     @Override
     protected void setUp() throws Exception {
@@ -52,10 +51,6 @@ public class GnssNavigationMessageTest extends GnssTestCase {
 
     @Override
     protected void tearDown() throws Exception {
-        // Unregister listeners
-        if (mLocationListener != null) {
-            mTestLocationManager.removeLocationUpdates(mLocationListener);
-        }
         // Unregister GnssNavigationMessageListener
         if (mTestGnssNavigationMessageListener != null) {
             mTestLocationManager
@@ -77,9 +72,6 @@ public class GnssNavigationMessageTest extends GnssTestCase {
                 TAG, MIN_HARDWARE_YEAR_MEASUREMENTS_REQUIRED, isCtsVerifierTest())) {
             return;
         }
-
-        mLocationListener = new TestLocationListener(EVENTS_COUNT);
-        mTestLocationManager.requestLocationUpdates(mLocationListener);
 
         // Register Gps Navigation Message Listener.
         mTestGnssNavigationMessageListener =

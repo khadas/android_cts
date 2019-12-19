@@ -33,7 +33,6 @@ public class BitmapTest {
      * OOME is more appropriate.
      */
     @Test(expected=OutOfMemoryError.class)
-    @SecurityTest(minPatchLevel = "2018-01")
     public void test_33846679() {
         // This size is based on the max size possible in a GIF file,
         // which might be passed to createBitmap from a Java decoder.

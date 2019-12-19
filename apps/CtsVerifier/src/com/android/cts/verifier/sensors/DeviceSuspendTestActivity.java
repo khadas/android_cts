@@ -187,9 +187,18 @@ public class DeviceSuspendTestActivity
         }
 
         /**
-         * Verify that the device is able to suspend
+         * Verify that each continuous sensor is using the correct
+         * clock source (CLOCK_BOOTTIME) for timestamps.
          */
-        public void verifyDeviceCanSuspend() throws Throwable {
+        public String testTimestampClockSource() throws Throwable {
+            String string = null;
+            boolean error_occurred = false;
+            List<Sensor> sensorList = mSensorManager.getSensorList(Sensor.TYPE_ALL);
+            if (sensorList == null) {
+                throw new SensorTestStateNotSupportedException(
+                    "Sensors are not available in the system.");
+            }
+
             // Make sure clocks are different (i.e. kernel has suspended at least once)
             // so that we can determine if sensors are using correct clocksource timestamp
             final int MAX_SLEEP_ATTEMPTS = 10;
@@ -229,22 +238,6 @@ public class DeviceSuspendTestActivity
                 mDeviceSuspendLock.acquire();
             }
             mAlarmManager.cancel(mPendingIntent);
-        }
-
-        /**
-         * Verify that each continuous sensor is using the correct
-         * clock source (CLOCK_BOOTTIME) for timestamps.
-         */
-        public String testTimestampClockSource() throws Throwable {
-            String string = null;
-            boolean error_occurred = false;
-            List<Sensor> sensorList = mSensorManager.getSensorList(Sensor.TYPE_ALL);
-            if (sensorList == null) {
-                throw new SensorTestStateNotSupportedException(
-                    "Sensors are not available in the system.");
-            }
-
-            boolean needToVerifySuspend = true;
 
             for (Sensor sensor : sensorList) {
                 if (sensor.getReportingMode() != Sensor.REPORTING_MODE_CONTINUOUS) {
@@ -255,12 +248,6 @@ public class DeviceSuspendTestActivity
                     Log.i(TAG, "testTimestampClockSource skipping vendor specific sensor: '" + sensor.getName());
                     continue;
                 }
-
-                if (needToVerifySuspend) {
-                    verifyDeviceCanSuspend();
-                    needToVerifySuspend = false;
-                }
-
                 try {
                     string = runVerifySensorTimestampClockbase(sensor, false);
                     if (string != null) {

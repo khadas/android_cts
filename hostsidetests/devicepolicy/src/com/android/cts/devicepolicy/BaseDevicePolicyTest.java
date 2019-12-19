@@ -150,18 +150,7 @@ public class BaseDevicePolicyTest extends DeviceTestCase implements IBuildReceiv
         if (mPrimaryUserId != USER_SYSTEM) {
             mFixedUsers.add(USER_SYSTEM);
         }
-
-        if (mHasFeature) {
-            // Switching to primary is only needed when we're testing device admin features.
-            switchUser(mPrimaryUserId);
-        } else {
-            // Otherwise, all the tests can be executed in any of the Android users, so remain in
-            // current user, and don't delete it. This enables testing in secondary users.
-            if (getDevice().getCurrentUser() != mPrimaryUserId) {
-                mFixedUsers.add(getDevice().getCurrentUser());
-            }
-        }
-
+        switchUser(mPrimaryUserId);
         removeOwners();
         removeTestUsers();
         // Unlock keyguard before test

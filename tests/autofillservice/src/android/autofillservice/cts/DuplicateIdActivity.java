@@ -20,7 +20,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 public class DuplicateIdActivity extends AbstractAutoFillActivity {
-    private static final String TAG = "DuplicateIdActivity";
+    private static final String LOG_TAG = DuplicateIdActivity.class.getSimpleName();
 
     static final String DUPLICATE_ID = "duplicate_id";
 
@@ -28,7 +28,9 @@ public class DuplicateIdActivity extends AbstractAutoFillActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Log.v(TAG, "onCreate(" + savedInstanceState + ")");
+        if (savedInstanceState != null) {
+            Log.i(LOG_TAG, "onCreate(" + savedInstanceState + ")");
+        }
 
         setContentView(R.layout.duplicate_id_layout);
     }

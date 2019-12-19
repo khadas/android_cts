@@ -77,7 +77,7 @@ public class BurstCaptureTest extends Camera2SurfaceViewTestCase {
     private void yuvBurstTestByCamera(String cameraId) throws Exception {
         // Parameters
         final int MAX_CONVERGENCE_FRAMES = 150; // 5 sec at 30fps
-        final long MAX_PREVIEW_RESULT_TIMEOUT_MS = 2000;
+        final long MAX_PREVIEW_RESULT_TIMEOUT_MS = 1000;
         final int BURST_SIZE = 100;
         final float FRAME_DURATION_MARGIN_FRACTION = 0.1f;
 
@@ -127,7 +127,6 @@ public class BurstCaptureTest extends Camera2SurfaceViewTestCase {
         // Create session and start up preview
 
         SimpleCaptureCallback resultListener = new SimpleCaptureCallback();
-        SimpleCaptureCallback burstResultListener = new SimpleCaptureCallback();
         ImageDropperListener imageDropper = new ImageDropperListener();
 
         prepareCaptureAndStartPreview(
@@ -215,7 +214,7 @@ public class BurstCaptureTest extends Camera2SurfaceViewTestCase {
 
         if (maxSyncLatency == CameraCharacteristics.SYNC_MAX_LATENCY_PER_FRAME_CONTROL) {
             // The locked result we have is already synchronized so start the burst
-            mSession.captureBurst(burst, burstResultListener, mHandler);
+            mSession.captureBurst(burst, resultListener, mHandler);
         } else {
             // Need to get a synchronized result, and may need to start burst later to
             // be synchronized correctly
@@ -233,7 +232,7 @@ public class BurstCaptureTest extends Camera2SurfaceViewTestCase {
             int requestsNeededToSync = numFramesWaited - pipelineDepth;
             for (int i = 0; i < numFramesWaited; i++) {
                 if (!burstSent && requestsNeededToSync <= 0) {
-                    mSession.captureBurst(burst, burstResultListener, mHandler);
+                    mSession.captureBurst(burst, resultListener, mHandler);
                     burstSent = true;
                 }
                 lockedResult = resultListener.getCaptureResult(MAX_PREVIEW_RESULT_TIMEOUT_MS);
@@ -271,13 +270,11 @@ public class BurstCaptureTest extends Camera2SurfaceViewTestCase {
         // Process burst results
         int burstIndex = 0;
         CaptureResult burstResult =
-                burstResultListener.getCaptureResult(MAX_PREVIEW_RESULT_TIMEOUT_MS);
+                resultListener.getCaptureResultForRequest(burst.get(burstIndex),
+                    maxPipelineDepth + 1);
         long prevTimestamp = -1;
         final long frameDurationBound = (long)
                 (minStillFrameDuration * (1 + FRAME_DURATION_MARGIN_FRACTION) );
-
-        long burstStartTimestamp = burstResult.get(CaptureResult.SENSOR_TIMESTAMP);
-        long burstEndTimeStamp = 0;
 
         List<Long> frameDurations = new ArrayList<>();
 
@@ -310,25 +307,8 @@ public class BurstCaptureTest extends Camera2SurfaceViewTestCase {
 
             // Get next result
             burstIndex++;
-            if (burstIndex == BURST_SIZE) {
-                burstEndTimeStamp = burstResult.get(CaptureResult.SENSOR_TIMESTAMP);
-                break;
-            }
-            burstResult = burstResultListener.getCaptureResult(MAX_PREVIEW_RESULT_TIMEOUT_MS);
-        }
-
-        // Verify no preview frames interleaved in burst results
-        while (true)         {
-            CaptureResult previewResult =
-                    resultListener.getCaptureResult(MAX_PREVIEW_RESULT_TIMEOUT_MS);
-            long previewTimestamp = previewResult.get(CaptureResult.SENSOR_TIMESTAMP);
-            if (previewTimestamp >= burstStartTimestamp && previewTimestamp <= burstEndTimeStamp) {
-                fail("Preview frame is interleaved with burst frames! Preview timestamp:" +
-                        previewTimestamp + ", burst [" + burstStartTimestamp + ", " +
-                        burstEndTimeStamp + "]");
-            } else if (previewTimestamp > burstEndTimeStamp) {
-                break;
-            }
+            if (burstIndex == BURST_SIZE) break;
+            burstResult = resultListener.getCaptureResult(MAX_PREVIEW_RESULT_TIMEOUT_MS);
         }
 
         // Verify inter-frame durations

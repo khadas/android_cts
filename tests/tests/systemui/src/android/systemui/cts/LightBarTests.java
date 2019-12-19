@@ -20,11 +20,13 @@ import static android.support.test.InstrumentationRegistry.getInstrumentation;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.UiAutomation;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.SystemClock;
@@ -36,7 +38,6 @@ import android.view.MotionEvent;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 
 /**
@@ -55,7 +56,7 @@ public class LightBarTests extends LightBarTestBase {
      * Color may be slightly off-spec when resources are resized for lower densities. Use this error
      * margin to accommodate for that when comparing colors.
      */
-    private static final int COLOR_COMPONENT_ERROR_MARGIN = 20;
+    private static final int COLOR_COMPONENT_ERROR_MARGIN = 10;
 
     private final String NOTIFICATION_TAG = "TEST_TAG";
     private final String NOTIFICATION_CHANNEL_ID = "test_channel";
@@ -65,13 +66,11 @@ public class LightBarTests extends LightBarTestBase {
     @Rule
     public ActivityTestRule<LightBarActivity> mActivityRule = new ActivityTestRule<>(
             LightBarActivity.class);
-    @Rule
-    public TestName mTestName = new TestName();
 
     @Test
     @AppModeFull // Instant apps cannot create notifications
     public void testLightStatusBarIcons() throws Throwable {
-        assumeHasColoredStatusBar(mActivityRule);
+        assumeHasColoredStatusBar();
 
         mNm = (NotificationManager) getInstrumentation().getContext()
                 .getSystemService(Context.NOTIFICATION_SERVICE);
@@ -94,7 +93,7 @@ public class LightBarTests extends LightBarTestBase {
         Thread.sleep(WAIT_TIME);
 
         Bitmap bitmap = takeStatusBarScreenshot(mActivityRule.getActivity());
-        Stats s = evaluateLightBarBitmap(bitmap, Color.RED /* background */, 0);
+        Stats s = evaluateLightBarBitmap(bitmap, Color.RED /* background */);
         assertLightStats(bitmap, s);
 
         mNm.cancelAll();
@@ -103,7 +102,7 @@ public class LightBarTests extends LightBarTestBase {
 
     @Test
     public void testLightNavigationBar() throws Throwable {
-        assumeHasColoredNavigationBar(mActivityRule);
+        assumeHasColorNavigationBar();
 
         requestLightBars(Color.RED /* background */);
         Thread.sleep(WAIT_TIME);
@@ -114,15 +113,14 @@ public class LightBarTests extends LightBarTestBase {
         injectCanceledTap(x, y);
         Thread.sleep(WAIT_TIME);
 
-        LightBarActivity activity = mActivityRule.getActivity();
-        Bitmap bitmap = takeNavigationBarScreenshot(activity);
-        Stats s = evaluateLightBarBitmap(bitmap, Color.RED /* background */, activity.getBottom());
+        Bitmap bitmap = takeNavigationBarScreenshot(mActivityRule.getActivity());
+        Stats s = evaluateLightBarBitmap(bitmap, Color.RED /* background */);
         assertLightStats(bitmap, s);
     }
 
     @Test
     public void testNavigationBarDivider() throws Throwable {
-        assumeHasColoredNavigationBar(mActivityRule);
+        assumeHasColorNavigationBar();
 
         mActivityRule.runOnUiThread(() -> {
             mActivityRule.getActivity().getWindow().setNavigationBarColor(Color.RED);
@@ -130,8 +128,7 @@ public class LightBarTests extends LightBarTestBase {
         });
         Thread.sleep(WAIT_TIME);
 
-        checkNavigationBarDivider(mActivityRule.getActivity(), Color.WHITE, Color.RED,
-                mTestName.getMethodName());
+        checkNavigationBarDivider(mActivityRule.getActivity(), Color.WHITE);
     }
 
     private void injectCanceledTap(int x, int y) {
@@ -152,26 +149,42 @@ public class LightBarTests extends LightBarTestBase {
     private void assertLightStats(Bitmap bitmap, Stats s) {
         boolean success = false;
         try {
-            assumeNavigationBarChangesColor(s.backgroundPixels, s.totalPixels());
+            assertMoreThan("Not enough background pixels", 0.3f,
+                    (float) s.backgroundPixels / s.totalPixels(),
+                    "Is the bar background showing correctly (solid red)?");
 
             assertMoreThan("Not enough pixels colored as in the spec", 0.3f,
-                    (float) s.iconPixels / (float) s.foregroundPixels(),
+                    (float) s.iconPixels / s.foregroundPixels(),
                     "Are the bar icons colored according to the spec "
                             + "(60% black and 24% black)?");
 
             assertLessThan("Too many lighter pixels lighter than the background", 0.05f,
-                    (float) s.sameHueLightPixels / (float) s.foregroundPixels(),
+                    (float) s.sameHueLightPixels / s.foregroundPixels(),
                     "Are the bar icons dark?");
 
             assertLessThan("Too many pixels with a changed hue", 0.05f,
-                    (float) s.unexpectedHuePixels / (float) s.foregroundPixels(),
+                    (float) s.unexpectedHuePixels / s.foregroundPixels(),
                     "Are the bar icons color-free?");
 
             success = true;
         } finally {
             if (!success) {
-                dumpBitmap(bitmap, mTestName.getMethodName());
+                dumpBitmap(bitmap);
             }
+        }
+    }
+
+    private void assertMoreThan(String what, float expected, float actual, String hint) {
+        if (!(actual > expected)) {
+            fail(what + ": expected more than " + expected * 100 + "%, but only got " + actual * 100
+                    + "%; " + hint);
+        }
+    }
+
+    private void assertLessThan(String what, float expected, float actual, String hint) {
+        if (!(actual < expected)) {
+            fail(what + ": expected less than " + expected * 100 + "%, but got " + actual * 100
+                    + "%; " + hint);
         }
     }
 
@@ -210,21 +223,12 @@ public class LightBarTests extends LightBarTestBase {
         }
     }
 
-    private Stats evaluateLightBarBitmap(Bitmap bitmap, int background, int shiftY) {
+    private Stats evaluateLightBarBitmap(Bitmap bitmap, int background) {
         int iconColor = 0x99000000;
         int iconPartialColor = 0x3d000000;
 
         int mixedIconColor = mixSrcOver(background, iconColor);
         int mixedIconPartialColor = mixSrcOver(background, iconPartialColor);
-        float [] hsvMixedIconColor = new float[3];
-        float [] hsvMixedPartialColor = new float[3];
-        Color.RGBToHSV(Color.red(mixedIconColor), Color.green(mixedIconColor),
-                Color.blue(mixedIconColor), hsvMixedIconColor);
-        Color.RGBToHSV(Color.red(mixedIconPartialColor), Color.green(mixedIconPartialColor),
-                Color.blue(mixedIconPartialColor), hsvMixedPartialColor);
-
-        float maxHsvValue = Math.max(hsvMixedIconColor[2], hsvMixedPartialColor[2]);
-        float minHsvValue = Math.min(hsvMixedIconColor[2], hsvMixedPartialColor[2]);
 
         int[] pixels = new int[bitmap.getHeight() * bitmap.getWidth()];
         bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
@@ -232,26 +236,14 @@ public class LightBarTests extends LightBarTestBase {
         Stats s = new Stats();
         float eps = 0.005f;
 
-        loadCutout(mActivityRule.getActivity());
-        float [] hsvPixel = new float[3];
-        int i = 0;
         for (int c : pixels) {
-            int x = i % bitmap.getWidth();
-            int y = i / bitmap.getWidth();
-            i++;
-            if (isInsideCutout(x, shiftY + y)) {
-                continue;
-            }
-
-            if (isColorSame(c, background)) {
+            if (c == background) {
                 s.backgroundPixels++;
                 continue;
             }
 
             // What we expect the icons to be colored according to the spec.
-            Color.RGBToHSV(Color.red(c), Color.green(c), Color.blue(c), hsvPixel);
-            if (isColorSame(c, mixedIconColor) || isColorSame(c, mixedIconPartialColor)
-                    || (hsvPixel[2] >= minHsvValue && hsvPixel[2] <= maxHsvValue)) {
+            if (isColorSame(c, mixedIconColor) || isColorSame(c, mixedIconPartialColor)) {
                 s.iconPixels++;
                 continue;
             }

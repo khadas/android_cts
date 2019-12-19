@@ -32,7 +32,6 @@ import static android.test.MoreAsserts.assertNotEqual;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.storage.StorageManager;
 import android.os.storage.StorageVolume;
@@ -353,18 +352,17 @@ public class ScopedDirectoryAccessClientTest extends DocumentsClientTestCase {
         final boolean gotIt = mDevice.wait(Until.hasObject(By.text(dir)), TIMEOUT);
         assertTrue("object with text'(" + dir + "') not visible yet", gotIt);
         // TODO: find a better way to get the toggle rather then getting all
-        UiObject2 toggle = getUniqueToggle();
+        final List<UiObject2> toggles = mDevice.findObjects(By.res("android:id/switch_widget"));
+        assertEquals("should have just one toggle: " + toggles, 1, toggles.size());
+        final UiObject2 toggle = toggles.get(0);
         assertFalse("toggle for '" + dir + "' should not be checked", toggle.isChecked());
         toggle.click();
-        toggle = getUniqueToggle();
         assertTrue("toggle for '" + dir + "' should be checked", toggle.isChecked());
 
         // Close app screen.
         mDevice.pressBack();
-        if (!isTelevision()) {
-            // Close main screen.
-            mDevice.pressBack();
-        }
+        // Close main screen.
+        mDevice.pressBack();
 
         // Finally, make sure it's reset by requesting it again.
         sendOpenExternalDirectoryIntent(volume, dir);
@@ -394,28 +392,21 @@ public class ScopedDirectoryAccessClientTest extends DocumentsClientTestCase {
         final boolean gotIt = mDevice.wait(Until.hasObject(By.text(dir)), TIMEOUT);
         assertTrue("object with text'(" + dir + "') not visible yet", gotIt);
         // TODO: find a better way to get the toggle rather then getting all
-        UiObject2 toggle = getUniqueToggle();
+        final List<UiObject2> toggles = mDevice.findObjects(By.res("android:id/switch_widget"));
+        assertEquals("should have just one toggle: " + toggles, 1, toggles.size());
+        final UiObject2 toggle = toggles.get(0);
         assertTrue("toggle for '" + dir + "' should be checked", toggle.isChecked());
         toggle.click();
-        toggle = getUniqueToggle();
         assertFalse("toggle for '" + dir + "' should not be checked", toggle.isChecked());
 
         // Close app screen.
         mDevice.pressBack();
-        if (!isTelevision()) {
-            // Close main screen.
-            mDevice.pressBack();
-        }
+        // Close main screen.
+        mDevice.pressBack();
 
         // Then tries again - should be denied.
         sendOpenExternalDirectoryIntent(volume, dir);
         assertActivityFailed();
-    }
-
-    private UiObject2 getUniqueToggle() {
-        List<UiObject2> toggles = mDevice.findObjects(By.res("android:id/switch_widget"));
-        assertEquals("should have just one toggle: " + toggles, 1, toggles.size());
-        return toggles.get(0);
     }
 
     private void launchDirectoryAccessSettingsScreenAndSelectApp() {

@@ -1097,7 +1097,7 @@ public class CameraDeviceTest extends Camera2AndroidTestCase {
             }
 
             for (int inFormat : inputFormats) {
-                int outputFormats [] = config.getValidOutputFormatsForInput(inFormat);
+                int outputFormats [] = config.getValidOutputFormatsForInput(inputFormat);
                 for (int outFormat : outputFormats) {
                     if (inFormat == outFormat) {
                         inputFormat = inFormat;
@@ -2474,12 +2474,6 @@ public class CameraDeviceTest extends Camera2AndroidTestCase {
                 break;
             default:
                 // Skip unknown templates here
-        }
-
-        // Check distortion correction mode
-        if (mStaticInfo.isDistortionCorrectionSupported()) {
-            mCollector.expectKeyValueNotEquals(request, DISTORTION_CORRECTION_MODE,
-                    CaptureRequest.DISTORTION_CORRECTION_MODE_OFF);
         }
 
         // TODO: use the list of keys from CameraCharacteristics to avoid expecting

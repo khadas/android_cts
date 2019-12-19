@@ -77,7 +77,6 @@ public class ItsTestActivity extends DialogTestListActivity {
     private static final int MAX_SUMMARY_LEN = 200;
 
     private final ResultReceiver mResultsReceiver = new ResultReceiver();
-    private boolean mReceiverRegistered = false;
 
     // Initialized in onCreate
     ArrayList<String> mToBeTestedCameraIds = null;
@@ -402,16 +401,13 @@ public class ItsTestActivity extends DialogTestListActivity {
             Log.d(TAG, "register ITS result receiver");
             IntentFilter filter = new IntentFilter(ACTION_ITS_RESULT);
             registerReceiver(mResultsReceiver, filter);
-            mReceiverRegistered = true;
         }
     }
 
     @Override
     public void onDestroy() {
         Log.d(TAG, "unregister ITS result receiver");
-        if (mReceiverRegistered) {
-            unregisterReceiver(mResultsReceiver);
-        }
+        unregisterReceiver(mResultsReceiver);
         super.onDestroy();
     }
 

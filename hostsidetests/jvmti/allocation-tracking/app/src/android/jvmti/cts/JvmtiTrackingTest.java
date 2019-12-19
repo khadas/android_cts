@@ -22,12 +22,16 @@ import org.junit.Test;
 import art.Main;
 
 /**
- * Check tracking-related functionality.
+ * Check tagging-related functionality.
  */
 public class JvmtiTrackingTest extends JvmtiTestBase {
 
     @Before
     public void setUp() throws Exception {
+        // Bind our native methods.
+        Main.bindAgentJNI("android/jvmti/cts/JvmtiTrackingTest",
+                getClass().getClassLoader());
+
         prefetchClassNames();
     }
 

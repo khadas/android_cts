@@ -28,6 +28,7 @@ import static android.server.am.ComponentNameUtils.getWindowName;
 import static android.server.am.Components.BROADCAST_RECEIVER_ACTIVITY;
 import static android.server.am.Components.BroadcastReceiverActivity.ACTION_TRIGGER_BROADCAST;
 import static android.server.am.Components.BroadcastReceiverActivity.EXTRA_BROADCAST_ORIENTATION;
+import static android.server.am.Components.BroadcastReceiverActivity.EXTRA_FINISH_BROADCAST;
 import static android.server.am.Components.BroadcastReceiverActivity.EXTRA_MOVE_BROADCAST_TO_BACK;
 import static android.server.am.Components.DIALOG_WHEN_LARGE_ACTIVITY;
 import static android.server.am.Components.LANDSCAPE_ORIENTATION_ACTIVITY;
@@ -53,9 +54,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
-import static com.android.compatibility.common.util.PackageUtil.supportsRotation;
 
 import android.content.ComponentName;
 import android.graphics.Rect;
@@ -74,6 +73,9 @@ import java.util.List;
 public class ActivityManagerAppConfigurationTests extends ActivityManagerTestBase {
 
     // TODO(b/70247058): Use {@link Context#sendBroadcast(Intent).
+    // Shell command to finish {@link #BROADCAST_RECEIVER_ACTIVITY}.
+    private static final String FINISH_ACTIVITY_BROADCAST = "am broadcast -a "
+            + ACTION_TRIGGER_BROADCAST + " --ez " + EXTRA_FINISH_BROADCAST + " true";
     // Shell command to move {@link #BROADCAST_RECEIVER_ACTIVITY} task to back.
     private static final String MOVE_TASK_TO_BACK_BROADCAST = "am broadcast -a "
             + ACTION_TRIGGER_BROADCAST + " --ez " + EXTRA_MOVE_BROADCAST_TO_BACK + " true";
@@ -207,20 +209,21 @@ public class ActivityManagerAppConfigurationTests extends ActivityManagerTestBas
 
     private void rotateAndCheckSizes(RotationSession rotationSession, ReportedSizes prevSizes)
             throws Exception {
-        final ActivityManagerState.ActivityTask task =
-                mAmWmState.getAmState().getTaskByActivity(RESIZEABLE_ACTIVITY);
-        final int displayId = mAmWmState.getAmState().getStackById(task.mStackId).mDisplayId;
-
-        assumeTrue(supportsLockedUserRotation(rotationSession, displayId));
-
         final int[] rotations = { ROTATION_270, ROTATION_180, ROTATION_90, ROTATION_0 };
         for (final int rotation : rotations) {
             final LogSeparator logSeparator = separateLogs();
+            final ActivityManagerState.ActivityTask task =
+                    mAmWmState.getAmState().getTaskByActivity(RESIZEABLE_ACTIVITY);
+            final int displayId = mAmWmState.getAmState().getStackById(task.mStackId).mDisplayId;
             rotationSession.set(rotation);
             final int newDeviceRotation = getDeviceRotation(displayId);
             if (newDeviceRotation == INVALID_DEVICE_ROTATION) {
                 logE("Got an invalid device rotation value. "
                         + "Continuing the test despite of that, but it is likely to fail.");
+            } else if (rotation != newDeviceRotation) {
+                log("This device doesn't support locked user "
+                        + "rotation mode. Not continuing the rotation checks.");
+                return;
             }
 
             final ReportedSizes rotatedSizes = getActivityDisplaySize(RESIZEABLE_ACTIVITY,
@@ -405,14 +408,14 @@ public class ActivityManagerAppConfigurationTests extends ActivityManagerTestBas
         assumeTrue("Skipping test: no rotation support", supportsRotation());
 
         LogSeparator logSeparator = separateLogs();
-        launchActivity(PORTRAIT_ORIENTATION_ACTIVITY, WINDOWING_MODE_FULLSCREEN);
+        launchActivity(PORTRAIT_ORIENTATION_ACTIVITY);
         mAmWmState.assertVisibility(PORTRAIT_ORIENTATION_ACTIVITY, true /* visible */);
 
         assertLifecycleCounts(PORTRAIT_ORIENTATION_ACTIVITY, logSeparator, 1 /* create */,
                 1 /* start */, 1 /* resume */, 0 /* pause */, 0 /* stop */, 0 /* destroy */,
                 0 /* config */);
 
-        launchActivity(LANDSCAPE_ORIENTATION_ACTIVITY, WINDOWING_MODE_FULLSCREEN);
+        launchActivity(LANDSCAPE_ORIENTATION_ACTIVITY);
         mAmWmState.assertVisibility(LANDSCAPE_ORIENTATION_ACTIVITY, true /* visible */);
 
         assertLifecycleCounts(PORTRAIT_ORIENTATION_ACTIVITY, logSeparator, 1 /* create */,
@@ -422,7 +425,7 @@ public class ActivityManagerAppConfigurationTests extends ActivityManagerTestBas
                 1 /* start */, 1 /* resume */, 0 /* pause */, 0 /* stop */, 0 /* destroy */,
                 0 /* config */);
 
-        launchActivity(PORTRAIT_ORIENTATION_ACTIVITY, WINDOWING_MODE_FULLSCREEN);
+        launchActivity(PORTRAIT_ORIENTATION_ACTIVITY);
         mAmWmState.assertVisibility(PORTRAIT_ORIENTATION_ACTIVITY, true /* visible */);
 
         assertLifecycleCounts(PORTRAIT_ORIENTATION_ACTIVITY, logSeparator, 2 /* create */,
@@ -496,10 +499,6 @@ public class ActivityManagerAppConfigurationTests extends ActivityManagerTestBas
 
     @Test
     public void testNonFullscreenActivityPermitted() throws Exception {
-        if(!supportsRotation()) {
-            //cannot physically rotate the screen on automotive device, skip
-            return;
-        }
         try (final RotationSession rotationSession = new RotationSession()) {
             rotationSession.set(ROTATION_0);
 
@@ -531,7 +530,6 @@ public class ActivityManagerAppConfigurationTests extends ActivityManagerTestBas
         // Request portrait
         executeShellCommand(REQUEST_PORTRAIT_BROADCAST);
         mAmWmState.waitForLastOrientation(SCREEN_ORIENTATION_PORTRAIT);
-        waitForBroadcastActivityReady(SCREEN_ORIENTATION_PORTRAIT);
 
         // Finish activity
         executeShellCommand(FINISH_ACTIVITY_BROADCAST);
@@ -559,7 +557,6 @@ public class ActivityManagerAppConfigurationTests extends ActivityManagerTestBas
         launchActivityInNewTask(BROADCAST_RECEIVER_ACTIVITY);
         executeShellCommand(REQUEST_LANDSCAPE_BROADCAST);
         mAmWmState.waitForLastOrientation(SCREEN_ORIENTATION_LANDSCAPE);
-        waitForBroadcastActivityReady(SCREEN_ORIENTATION_LANDSCAPE);
         executeShellCommand(FINISH_ACTIVITY_BROADCAST);
 
         // Verify that activity brought to front is in originally requested orientation.
@@ -577,7 +574,6 @@ public class ActivityManagerAppConfigurationTests extends ActivityManagerTestBas
         launchActivityInNewTask(BROADCAST_RECEIVER_ACTIVITY);
         executeShellCommand(REQUEST_PORTRAIT_BROADCAST);
         mAmWmState.waitForLastOrientation(SCREEN_ORIENTATION_PORTRAIT);
-        waitForBroadcastActivityReady(SCREEN_ORIENTATION_PORTRAIT);
         executeShellCommand(FINISH_ACTIVITY_BROADCAST);
 
         // Verify that activity brought to front is in originally requested orientation.
@@ -609,9 +605,6 @@ public class ActivityManagerAppConfigurationTests extends ActivityManagerTestBas
         // Rotate the activity and check that it receives configuration changes with a different
         // orientation each time.
         try (final RotationSession rotationSession = new RotationSession()) {
-            assumeTrue("Skipping test: no locked user rotation mode support.",
-                    supportsLockedUserRotation(rotationSession, displayId));
-
             rotationSession.set(ROTATION_0);
             ReportedSizes reportedSizes =
                     getLastReportedSizesForActivity(RESIZEABLE_ACTIVITY, logSeparator);
@@ -621,6 +614,12 @@ public class ActivityManagerAppConfigurationTests extends ActivityManagerTestBas
             for (final int rotation : rotations) {
                 logSeparator = separateLogs();
                 rotationSession.set(rotation);
+                final int newDeviceRotation = getDeviceRotation(displayId);
+                if (rotation != newDeviceRotation) {
+                    log("This device doesn't support locked user "
+                            + "rotation mode. Not continuing the rotation checks.");
+                    continue;
+                }
 
                 // Verify lifecycle count and orientation changes.
                 assertRelaunchOrConfigChanged(RESIZEABLE_ACTIVITY, 0 /* numRelaunch */,
@@ -644,9 +643,6 @@ public class ActivityManagerAppConfigurationTests extends ActivityManagerTestBas
     @Test
     public void testFixedOrientationWhenRotating() throws Exception {
         assumeTrue("Skipping test: no rotation support", supportsRotation());
-        // TODO(b/110533226): Fix test on devices with display cutout
-        assumeFalse("Skipping test: display cutout present, can't predict exact lifecycle",
-                hasDisplayCutout());
 
         // Start portrait-fixed activity
         LogSeparator logSeparator = separateLogs();
@@ -659,15 +655,18 @@ public class ActivityManagerAppConfigurationTests extends ActivityManagerTestBas
 
         // Rotate the activity and check that the orientation doesn't change
         try (final RotationSession rotationSession = new RotationSession()) {
-            assumeTrue("Skipping test: no user locked rotation support.",
-                    supportsLockedUserRotation(rotationSession, displayId));
-
             rotationSession.set(ROTATION_0);
 
             final int[] rotations = { ROTATION_270, ROTATION_180, ROTATION_90, ROTATION_0 };
             for (final int rotation : rotations) {
                 logSeparator = separateLogs();
                 rotationSession.set(rotation);
+                final int newDeviceRotation = getDeviceRotation(displayId);
+                if (rotation != newDeviceRotation) {
+                    log("This device doesn't support locked user "
+                            + "rotation mode. Not continuing the rotation checks.");
+                    continue;
+                }
 
                 // Verify lifecycle count and orientation changes.
                 assertRelaunchOrConfigChanged(PORTRAIT_ORIENTATION_ACTIVITY, 0 /* numRelaunch */,
@@ -702,7 +701,6 @@ public class ActivityManagerAppConfigurationTests extends ActivityManagerTestBas
         // Request portrait
         executeShellCommand(REQUEST_PORTRAIT_BROADCAST);
         mAmWmState.waitForLastOrientation(SCREEN_ORIENTATION_PORTRAIT);
-        waitForBroadcastActivityReady(SCREEN_ORIENTATION_PORTRAIT);
 
         // Finish activity
         executeShellCommand(MOVE_TASK_TO_BACK_BROADCAST);
@@ -720,7 +718,6 @@ public class ActivityManagerAppConfigurationTests extends ActivityManagerTestBas
     @FlakyTest(bugId = 71918731)
     @Test
     public void testSplitscreenPortraitAppOrientationRequests() throws Exception {
-        assumeTrue("Skipping test: no rotation support", supportsRotation());
         assumeTrue("Skipping test: no multi-window support", supportsSplitScreenMultiWindow());
 
         try (final RotationSession rotationSession = new RotationSession()) {
@@ -890,11 +887,6 @@ public class ActivityManagerAppConfigurationTests extends ActivityManagerTestBas
         assertNotNull("Should be on a display", display);
 
         return display.getDisplayRect();
-    }
-
-    private void waitForBroadcastActivityReady(int orientation) {
-        mAmWmState.waitForActivityOrientation(BROADCAST_RECEIVER_ACTIVITY, orientation);
-        mAmWmState.waitForActivityState(BROADCAST_RECEIVER_ACTIVITY, STATE_RESUMED);
     }
 
     /**

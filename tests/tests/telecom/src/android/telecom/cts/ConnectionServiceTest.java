@@ -123,37 +123,10 @@ public class ConnectionServiceTest extends BaseTelecomTestWithMockServices {
         waitOnAllHandlers(getInstrumentation());
 
         AudioManager audioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
-        waitUntilConditionIsTrueOrTimeout(
-                new Condition() {
-                    @Override
-                    public Object expected() {
-                        return AudioManager.MODE_IN_COMMUNICATION;
-                    }
-
-                    @Override
-                    public Object actual() {
-                        return audioManager.getMode();
-                    }
-                },
-                WAIT_FOR_STATE_CHANGE_TIMEOUT_MS, "wait for mode in-communication"
-        );
-
+        assertEquals(AudioManager.MODE_IN_COMMUNICATION, audioManager.getMode());
         connection.setAudioModeIsVoip(false);
         waitOnAllHandlers(getInstrumentation());
-        waitUntilConditionIsTrueOrTimeout(
-                new Condition() {
-                    @Override
-                    public Object expected() {
-                        return AudioManager.MODE_IN_CALL;
-                    }
-
-                    @Override
-                    public Object actual() {
-                        return audioManager.getMode();
-                    }
-                },
-                WAIT_FOR_STATE_CHANGE_TIMEOUT_MS, "wait for mode in-call"
-        );
+        assertEquals(AudioManager.MODE_IN_CALL, audioManager.getMode());
     }
 
     public void testConnectionServiceFocusGainedWithNoConnectionService() {
@@ -176,11 +149,9 @@ public class ConnectionServiceTest extends BaseTelecomTestWithMockServices {
 
         // GIVEN a managed call
         placeAndVerifyCall();
-        Connection outgoing = verifyConnectionForOutgoingCall();
-        outgoing.setActive();
+        verifyConnectionForOutgoingCall().setActive();
         assertTrue(connectionService.waitForEvent(
                 MockConnectionService.EVENT_CONNECTION_SERVICE_FOCUS_GAINED));
-        assertCallState(mInCallCallbacks.getService().getLastCall(), Call.STATE_ACTIVE);
 
         // WHEN place another call has the same ConnectionService as the existing call
         placeAndVerifyCall();

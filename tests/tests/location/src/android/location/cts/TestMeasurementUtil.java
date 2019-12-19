@@ -24,7 +24,6 @@ import android.location.GnssNavigationMessage;
 import android.location.GnssStatus;
 import android.location.LocationManager;
 import android.os.Build;
-import android.os.SystemProperties;
 import android.util.Log;
 
 import java.util.Arrays;
@@ -56,19 +55,12 @@ public final class TestMeasurementUtil {
 
     private static final int YEAR_2016 = 2016;
     private static final int YEAR_2017 = 2017;
-
-    private enum GnssBand {
-        GNSS_L1,
-        GNSS_L2,
-        GNSS_L5,
-        GNSS_E6
-    }
+    private static final int YEAR_2018 = 2018;
 
     // The valid Gnss navigation message type as listed in
     // android/hardware/libhardware/include/hardware/gps.h
     public static final Set<Integer> GNSS_NAVIGATION_MESSAGE_TYPE =
         new HashSet<Integer>(Arrays.asList(
-            GnssNavigationMessage.TYPE_UNKNOWN,
             GnssNavigationMessage.TYPE_GPS_L1CA,
             GnssNavigationMessage.TYPE_GPS_L2CNAV,
             GnssNavigationMessage.TYPE_GPS_L5CNAV,
@@ -342,6 +334,7 @@ public final class TestMeasurementUtil {
     private static void verifySvid(GnssMeasurement measurement, SoftAssert softAssert,
         long timeInNs) {
 
+        String svidLogMessageFormat = "svid: Space Vehicle ID. Constellation type = %s";
         int constellationType = measurement.getConstellationType();
         int svid = measurement.getSvid();
         validateSvidSub(softAssert, timeInNs, constellationType, svid);
@@ -389,17 +382,17 @@ public final class TestMeasurementUtil {
                 softAssert.assertTrue("svid: Space Vehicle ID. Constellation type " +
                                 "= CONSTELLATION_BEIDOU",
                         timeInNs,
-                        "1 <= X <= 63",
+                        "1 <= X <= 36",
                         svidValue,
-                        svid >= 1 && svid <= 63);
+                        svid >= 1 && svid <= 36);
                 break;
             case GnssStatus.CONSTELLATION_GALILEO:
                 softAssert.assertTrue("svid: Space Vehicle ID. Constellation type " +
                                 "= CONSTELLATION_GALILEO",
                         timeInNs,
-                        "1 <= X <= 36",
+                        "1 <= X <= 37",
                         String.valueOf(svid),
-                        svid >= 1 && svid <= 36);
+                        svid >= 1 && svid <= 37);
                 break;
             default:
                 // Explicit fail if did not receive valid constellation type.
@@ -594,15 +587,6 @@ public final class TestMeasurementUtil {
                             "0 >= X <= 7 days",
                             String.valueOf(sv_time_days),
                             sv_time_days >= 0 && sv_time_days <= 7);
-                } else if ((state & GnssMeasurement.STATE_TOW_KNOWN)
-                        == GnssMeasurement.STATE_TOW_KNOWN) {
-                    softAssert.assertTrue(getReceivedSvTimeNsLogMessage(
-                                    "GNSS_MEASUREMENT_STATE_TOW_KNOWN",
-                                    "GnssStatus.CONSTELLATION_BEIDOU"),
-                            timeInNs,
-                            "0 >= X <= 7 days",
-                            String.valueOf(sv_time_days),
-                            sv_time_days >= 0 && sv_time_days <= 7);
                 } else if ((state & GnssMeasurement.STATE_SUBFRAME_SYNC)
                         == GnssMeasurement.STATE_SUBFRAME_SYNC) {
                     softAssert.assertTrue(getReceivedSvTimeNsLogMessage(
@@ -653,7 +637,7 @@ public final class TestMeasurementUtil {
         }
     }
 
-    private static String getReceivedSvTimeNsLogMessage(String state, String constellationType) {
+    private static String getReceivedSvTimeNsLogMessage(String constellationType, String state) {
         return "received_sv_time_ns: Received SV Time-of-Week in ns. Constellation type = "
                 + constellationType + ". State = " + state;
     }
@@ -680,15 +664,6 @@ public final class TestMeasurementUtil {
                 == GnssMeasurement.STATE_TOW_DECODED) {
             softAssert.assertTrue(getReceivedSvTimeNsLogMessage(
                             "GNSS_MEASUREMENT_STATE_TOW_DECODED",
-                            constellationType),
-                    timeInNs,
-                    "0 >= X <= 7 days",
-                    String.valueOf(sv_time_days),
-                    sv_time_days >= 0 && sv_time_days <= 7);
-        } else if ((state & GnssMeasurement.STATE_TOW_KNOWN)
-                == GnssMeasurement.STATE_TOW_KNOWN) {
-            softAssert.assertTrue(getReceivedSvTimeNsLogMessage(
-                            "GNSS_MEASUREMENT_STATE_TOW_KNOWN",
                             constellationType),
                     timeInNs,
                     "0 >= X <= 7 days",
@@ -723,34 +698,6 @@ public final class TestMeasurementUtil {
                     String.valueOf(sv_time_ms),
                     sv_time_ms >= 0 && sv_time_ms <= 1);
         }
-    }
-
-
-    /**
-     * Get a unique string for the SV including the constellation and the default L1 band.
-     *
-     * @param constellationType Gnss Constellation type
-     * @param svId Gnss Sv Identifier
-     */
-    public static String getUniqueSvStringId(int constellationType, int svId) {
-        return getUniqueSvStringId(constellationType, svId, GnssBand.GNSS_L1);
-    }
-
-    /**
-     * Get a unique string for the SV including the constellation and the band.
-     *
-     * @param constellationType Gnss Constellation type
-     * @param svId Gnss Sv Identifier
-     * @param carrierFrequencyHz Carrier Frequency for Sv in Hz
-     */
-    public static String getUniqueSvStringId(int constellationType, int svId,
-        float carrierFrequencyHz) {
-        return getUniqueSvStringId(constellationType, svId,
-            frequencyToGnssBand(carrierFrequencyHz));
-    }
-
-    private static String getUniqueSvStringId(int constellationType, int svId, GnssBand gnssBand) {
-        return gnssBand.toString() + "." + constellationType + "." + svId;
     }
 
     /**
@@ -816,10 +763,10 @@ public final class TestMeasurementUtil {
     public static void verifyGnssCarrierFrequency(SoftAssert softAssert,
         TestLocationManager testLocationManager,
         boolean hasCarrierFrequency, float carrierFrequencyHz) {
-        // Enforcing CarrierFrequencyHz present only for devices shipped with P+.
-        if (SystemProperties.getInt("ro.product.first_api_level", 0) >= Build.VERSION_CODES.P) {
+        // Enforcing CarrierFrequencyHz  check only for year 2018+
+        if (testLocationManager.getLocationManager().getGnssYearOfHardware() >= YEAR_2018) {
             softAssert.assertTrue("Measurement has Carrier Frequency: " + hasCarrierFrequency,
-                    hasCarrierFrequency);
+                hasCarrierFrequency);
         }
 
         if (hasCarrierFrequency) {
@@ -840,26 +787,5 @@ public final class TestMeasurementUtil {
         }
 
         return typesStr.length() > 2 ? typesStr.substring(0, typesStr.length() - 2) : "";
-    }
-
-    /**
-     * The band information is as of 2018, per http://www.navipedia.net/index.php/GNSS_signal
-     * Bands are combined for simplicity as the constellation is also tracked.
-     *
-     * @param frequencyHz Frequency in Hz
-     * @return GnssBand where the frequency lies.
-     */
-    private static GnssBand frequencyToGnssBand(float frequencyHz) {
-        float frequencyMhz = frequencyHz/1e6F;
-        if (frequencyMhz >= 1151 && frequencyMhz <= 1214) {
-            return GnssBand.GNSS_L5;
-        }
-        if (frequencyMhz > 1214 && frequencyMhz <= 1255) {
-            return GnssBand.GNSS_L2;
-        }
-        if (frequencyMhz > 1255 && frequencyMhz <= 1300) {
-            return GnssBand.GNSS_E6;
-        }
-        return GnssBand.GNSS_L1; // default to L1 band
     }
 }

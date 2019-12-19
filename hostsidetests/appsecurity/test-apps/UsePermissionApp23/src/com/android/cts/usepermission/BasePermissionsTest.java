@@ -39,7 +39,6 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
-import android.support.test.uiautomator.Until;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
@@ -328,7 +327,6 @@ public abstract class BasePermissionsTest {
 
     private void scrollToBottomIfWatch() throws Exception {
         if (mWatch) {
-            getUiDevice().wait(Until.findObject(By.clazz(ScrollView.class)), GLOBAL_TIMEOUT_MILLIS);
             UiScrollable scrollable =
                     new UiScrollable(new UiSelector().className(ScrollView.class));
             if (scrollable.exists()) {
@@ -478,9 +476,7 @@ public abstract class BasePermissionsTest {
                     return result;
                 }
                 try {
-                    while (child.getActionList().contains(
-                            AccessibilityAction.ACTION_SCROLL_FORWARD) || child.getActionList()
-                            .contains(AccessibilityAction.ACTION_SCROLL_DOWN)) {
+                    while (child.getActionList().contains(AccessibilityAction.ACTION_SCROLL_FORWARD)) {
                         scrollForward(child);
                         result = getNodeTimed(() -> findByText(child, text), false);
                         if (result != null) {

@@ -51,7 +51,7 @@ class Chart(object):
     """
 
     def __init__(self, chart_file, height, distance, scale_start, scale_stop,
-                 scale_step, camera_id=None):
+                 scale_step):
         """Initial constructor for class.
 
         Args:
@@ -61,7 +61,6 @@ class Chart(object):
             scale_start:    float; start value for scaling for chart search
             scale_stop:     float; stop value for scaling for chart search
             scale_step:     float; step value for scaling for chart search
-            camera_id:      int; camera used for extractor
         """
         self._file = chart_file
         self._height = height
@@ -71,7 +70,7 @@ class Chart(object):
         self._scale_step = scale_step
         self.xnorm, self.ynorm, self.wnorm, self.hnorm, self.scale = its.image.chart_located_per_argv()
         if not self.xnorm:
-            with its.device.ItsSession(camera_id) as cam:
+            with its.device.ItsSession() as cam:
                 props = cam.get_camera_properties()
                 if its.caps.read_3a(props):
                     self.locate(cam, props)
@@ -159,9 +158,6 @@ class Chart(object):
         print 'Finding chart in scene...'
         for scale in numpy.arange(scale_start, scale_stop, scale_step):
             scene_scaled = scale_img(scene_gray, scale)
-            if (scene_scaled.shape[0] < chart.shape[0] or
-                scene_scaled.shape[1] < chart.shape[1]):
-                continue
             result = cv2.matchTemplate(scene_scaled, chart, cv2.TM_CCOEFF)
             _, opt_val, _, top_left_scaled = cv2.minMaxLoc(result)
             # print out scale and match

@@ -171,7 +171,7 @@ public class DirectBootHostTest extends BaseHostJUnit4Test {
                     doTest = false;
                 }
                 getDevice().waitForDeviceNotAvailable(SHUTDOWN_TIME_MS);
-                getDevice().waitForDeviceOnline(120000);
+                getDevice().waitForDeviceOnline();
             } else {
                 getDevice().rebootUntilOnline();
             }

@@ -311,7 +311,6 @@ public class EnqueueJobWorkTest extends ConstraintTest {
         mJobScheduler.enqueue(ji, new JobWorkItem(work6));
         kTestEnvironment.readyToWork();
         SystemUtil.runShellCommand(getInstrumentation(), "cmd jobscheduler run "
-                + " --user " + getCurrentUser() + " "
                 + kJobServiceComponent.getPackageName() + " " + ENQUEUE_WORK_JOB_ID);
 
         assertTrue("Restarted with work enqueued did not execute.",
@@ -367,7 +366,6 @@ public class EnqueueJobWorkTest extends ConstraintTest {
         mJobScheduler.enqueue(ji, new JobWorkItem(work6));
         kTestEnvironment.readyToWork();
         SystemUtil.runShellCommand(getInstrumentation(), "cmd jobscheduler run "
-                + " --user " + getCurrentUser() + " "
                 + kJobServiceComponent.getPackageName() + " " + ENQUEUE_WORK_JOB_ID);
 
         assertTrue("Restarted with work enqueued did not execute.",
@@ -430,9 +428,5 @@ public class EnqueueJobWorkTest extends ConstraintTest {
         // And wait for everything to be cleaned up.
         waitPermissionRevoke(mFirstUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 5000);
         waitPermissionRevoke(mSecondUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 5000);
-    }
-
-    private static int getCurrentUser() {
-        return android.os.Process.myUserHandle().getIdentifier();
     }
 }

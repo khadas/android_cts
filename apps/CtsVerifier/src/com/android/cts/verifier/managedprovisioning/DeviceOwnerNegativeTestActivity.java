@@ -20,7 +20,6 @@ import android.app.Activity;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.database.DataSetObserver;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -99,12 +98,10 @@ public class DeviceOwnerNegativeTestActivity extends PassFailButtons.TestListAct
                         .putExtra(EnterprisePrivacyInfoOnlyTestActivity.EXTRA_INFO,
                                 R.string.enterprise_privacy_quick_settings_negative_info),
                         null));
-        if(!getPackageManager().hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)) {
-            adapter.add(createInteractiveTestItem(this, ENTERPRISE_PRIVACY_KEYGUARD_NEGATIVE,
-                    R.string.enterprise_privacy_keyguard_negative,
-                    R.string.enterprise_privacy_keyguard_negative_info,
-                    new ButtonInfo(R.string.go_button_text, new Intent(Settings.ACTION_SETTINGS))));
-        }
+        adapter.add(createInteractiveTestItem(this, ENTERPRISE_PRIVACY_KEYGUARD_NEGATIVE,
+                R.string.enterprise_privacy_keyguard_negative,
+                R.string.enterprise_privacy_keyguard_negative_info,
+                new ButtonInfo(R.string.go_button_text, new Intent(Settings.ACTION_SETTINGS))));
         adapter.add(createInteractiveTestItem(this, ENTERPRISE_PRIVACY_ADD_ACCOUNT_NEGATIVE,
                 R.string.enterprise_privacy_add_account_negative,
                 R.string.enterprise_privacy_add_account_negative_info,

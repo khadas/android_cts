@@ -33,11 +33,7 @@ void fail(JNIEnv* env, const char* format, ...) {
     jclass exClass;
     const char *className = "java/lang/AssertionError";
     exClass = env->FindClass(className);
-    jmethodID constructor = env->GetMethodID(exClass, "<init>",
-                                             "(Ljava/lang/String;Ljava/lang/Throwable;)V");
-    jstring msgStr = env->NewStringUTF(msg);
-    jobject exception = env->NewObject(exClass, constructor, msgStr, nullptr);
-    env->Throw(static_cast<jthrowable>(exception));
+    env->ThrowNew(exClass, msg);
     free(msg);
 }
 

@@ -17,15 +17,12 @@
 package com.android.cts.verifier.dialer;
 
 import android.content.Intent;
-import android.content.Context;
 import android.os.Bundle;
 import android.telecom.TelecomManager;
-import android.telephony.TelephonyManager;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-
 import com.android.cts.verifier.PassFailButtons;
 import com.android.cts.verifier.R;
 
@@ -40,7 +37,6 @@ public class DialerImplementsTelecomIntentsActivity extends PassFailButtons.Acti
   private CheckBox mLaunchCallingAccountsSettingsCheckBox;
   private Button mLaunchAccessibilitySettingsButton;
   private CheckBox mLaunchAccessibilitySettingsCheckBox;
-  private TelephonyManager mTelephonyManager;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -53,8 +49,6 @@ public class DialerImplementsTelecomIntentsActivity extends PassFailButtons.Acti
         -1);
     setPassFailButtonClickListeners();
     getPassButton().setEnabled(false);
-
-    mTelephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 
     mLaunchCallSettingsCheckBox = findViewById(R.id.dialer_telecom_intents_call_settings_check_box);
     mLaunchShortSmsAnswerCheckBox = findViewById(R.id.dialer_telecom_intents_short_sms_check_box);
@@ -91,11 +85,6 @@ public class DialerImplementsTelecomIntentsActivity extends PassFailButtons.Acti
     mLaunchAccessibilitySettingsButton.setOnClickListener(
         (View unused) ->
             startActivity(new Intent(TelecomManager.ACTION_SHOW_CALL_ACCESSIBILITY_SETTINGS)));
-    if (!mTelephonyManager.isHearingAidCompatibilitySupported() && !mTelephonyManager.isTtyModeSupported()) {
-        mLaunchAccessibilitySettingsButton.setVisibility(View.INVISIBLE);
-        mLaunchAccessibilitySettingsCheckBox.setVisibility(View.INVISIBLE);
-        mLaunchAccessibilitySettingsCheckBox.setChecked(true);
-    }
   }
 
   private void onCheckedChangeListener() {

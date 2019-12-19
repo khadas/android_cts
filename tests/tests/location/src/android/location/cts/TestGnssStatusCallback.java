@@ -19,9 +19,10 @@ package android.location.cts;
 import android.location.GnssStatus;
 
 import android.util.Log;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Used for receiving notifications when GNSS status has changed.
@@ -29,6 +30,7 @@ import java.util.concurrent.CountDownLatch;
 class TestGnssStatusCallback extends GnssStatus.Callback {
 
     private final String mTag;
+    private volatile boolean mGpsStatusReceived;
     private GnssStatus mGnssStatus = null;
     // Timeout in sec for count down latch wait
     private static final int TIMEOUT_IN_SEC = 90;
@@ -37,8 +39,8 @@ class TestGnssStatusCallback extends GnssStatus.Callback {
     private final CountDownLatch mLatchTtff;
     private final CountDownLatch mLatchStop;
 
-    // Store list of Satellites including Gnss Band, constellation & SvId
-    private Set<String> mGnssUsedSvStringIds;
+    // Store list of Prn for Satellites.
+    private List<List<Integer>> mGpsSatellitePrns;
 
     TestGnssStatusCallback(String tag, int gpsStatusCountToCollect) {
         this.mTag = tag;
@@ -46,7 +48,7 @@ class TestGnssStatusCallback extends GnssStatus.Callback {
         mLatchStatus = new CountDownLatch(gpsStatusCountToCollect);
         mLatchTtff = new CountDownLatch(1);
         mLatchStop = new CountDownLatch(1);
-        mGnssUsedSvStringIds = new HashSet<>();
+        mGpsSatellitePrns = new ArrayList<List<Integer>>();
     }
 
     @Override
@@ -71,36 +73,32 @@ class TestGnssStatusCallback extends GnssStatus.Callback {
     public void onSatelliteStatusChanged(GnssStatus status) {
         Log.i(mTag, "Gnss Status Listener Received Status Update");
         mGnssStatus = status;
-        for (int i = 0; i < status.getSatelliteCount(); i++) {
-            if (!status.usedInFix(i)) {
-                continue;
-            }
-            if (status.hasCarrierFrequencyHz(i)) {
-                mGnssUsedSvStringIds.add(
-                    TestMeasurementUtil.getUniqueSvStringId(status.getConstellationType(i),
-                        status.getSvid(i), status.getCarrierFrequencyHz(i)));
-            } else {
-                mGnssUsedSvStringIds.add(
-                    TestMeasurementUtil.getUniqueSvStringId(status.getConstellationType(i),
-                        status.getSvid(i)));
-            }
-        }
         mLatchStatus.countDown();
     }
 
     /**
-     * Returns the list of SV String Ids which were used in fix during the collect
+     * Returns the list of PRNs (pseudo-random number) for the satellite.
      *
-     * @return mGnssUsedSvStringIds - Set of SV string Ids
+     * @return list of PRNs number
      */
-    public Set<String> getGnssUsedSvStringIds() {
-        return mGnssUsedSvStringIds;
+    public List<List<Integer>> getGpsSatellitePrns() {
+        return mGpsSatellitePrns;
     }
 
     /**
-     * Get GNSS Status.
+     * Check if GPS Status is received.
      *
-     * @return mGnssStatus GNSS Status
+     * @return {@code true} if the GPS Status is received and {@code false}
+     *         if GPS Status is not received.
+     */
+    public boolean isGpsStatusReceived() {
+        return mGpsStatusReceived;
+    }
+
+    /**
+     * Get GPS Status.
+     *
+     * @return mGpsStatus GPS Status
      */
     public GnssStatus getGnssStatus() {
         return mGnssStatus;

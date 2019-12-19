@@ -77,8 +77,8 @@ public class FlagSecureTest extends AssistTestBase {
     }
 
     public void testSecureActivity() throws Exception {
-        if (!mContext.getPackageManager().hasSystemFeature(FEATURE_VOICE_RECOGNIZERS)) {
-            Log.d(TAG, "Not running assist tests - voice_recognizers feature is not supported");
+        if (mActivityManager.isLowRamDevice()) {
+            Log.d(TAG, "Not running assist tests on low-RAM device.");
             return;
         }
         mTestActivity.startTest(TEST_CASE_TYPE);

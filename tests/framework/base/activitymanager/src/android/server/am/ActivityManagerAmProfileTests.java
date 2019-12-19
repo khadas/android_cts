@@ -26,8 +26,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import android.content.ComponentName;
+import android.support.test.InstrumentationRegistry;
 
+import org.junit.Before;
 import org.junit.Test;
+
+import java.io.File;
+import java.io.FileInputStream;
 
 /**
  * Build/Install/Run:
@@ -40,6 +45,17 @@ public class ActivityManagerAmProfileTests extends ActivityManagerTestBase {
     private static final String OUTPUT_FILE_PATH = "/data/local/tmp/profile.trace";
     private static final String FIRST_WORD_NO_STREAMING = "*version\n";
     private static final String FIRST_WORD_STREAMING = "SLOW";  // Magic word set by runtime.
+
+    private String mReadableFilePath = null;
+
+    @Before
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        mReadableFilePath = InstrumentationRegistry.getContext()
+            .getExternalFilesDir(null)
+            .getPath() + "/profile.trace";
+    }
 
     /**
      * Test am profile functionality with the following 3 configurable options:
@@ -106,11 +122,10 @@ public class ActivityManagerAmProfileTests extends ActivityManagerTestBase {
         launchActivity(DEBUGGABLE_APP_ACTIVITY);
 
         executeShellCommand(getStopProfileCmd(DEBUGGABLE_APP_ACTIVITY));
-
-        // Sleep for 0.3 second (300 milliseconds) so the generation of the profiling
+        // Sleep for 0.1 second (100 milliseconds) so the generation of the profiling
         // file is complete.
         try {
-            Thread.sleep(300);
+            Thread.sleep(100);
         } catch (InterruptedException e) {
             //ignored
         }
@@ -145,17 +160,28 @@ public class ActivityManagerAmProfileTests extends ActivityManagerTestBase {
 
     private void verifyOutputFileFormat(final boolean streaming) throws Exception {
         // This is a hack. The am service has to write to /data/local/tmp because it doesn't have
-        // access to the sdcard. The test cannot read from /data/local/tmp. This allows us to
-        // scan the content to validate what is needed for this test.
-        final String firstLine = executeShellCommand("head -1 " + OUTPUT_FILE_PATH);
+        // access to the sdcard but the test app can't read there
+        executeShellCommand("mv " + OUTPUT_FILE_PATH + " " + mReadableFilePath);
 
         final String expectedFirstWord = streaming ? FIRST_WORD_STREAMING : FIRST_WORD_NO_STREAMING;
-        assertThat(
-                "data size", firstLine.length(), greaterThanOrEqualTo(expectedFirstWord.length()));
-        final String actualFirstWord = firstLine.substring(0, expectedFirstWord.length());
+        final byte[] data = readFile(mReadableFilePath);
+        assertThat("data size", data.length, greaterThanOrEqualTo(expectedFirstWord.length()));
+        final String actualFirstWord = new String(data, 0, expectedFirstWord.length());
         assertEquals("Unexpected first word", expectedFirstWord, actualFirstWord);
 
         // Clean up.
-        executeShellCommand("rm -f " + OUTPUT_FILE_PATH);
+        executeShellCommand("rm -f " + OUTPUT_FILE_PATH + " " + mReadableFilePath);
+    }
+
+    private static byte[] readFile(String clientPath) throws Exception {
+        final File file = new File(clientPath);
+        assertTrue("File not found on client: " + clientPath, file.isFile());
+        final int size = (int) file.length();
+        final byte[] bytes = new byte[size];
+        try (final FileInputStream fis = new FileInputStream(file)) {
+            final int readSize = fis.read(bytes, 0, bytes.length);
+            assertEquals("Read all data", bytes.length, readSize);
+            return bytes;
+        }
     }
 }
